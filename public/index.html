@@ -4,44 +4,96 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GastoBot</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
 </head>
 
 <body>
     
     <header>
-
+            <h1>GastoBot</h1>
     </header>
 
     <main>
 
         <form>
 
-            <label for="gasto">Gasto</label>
-            <input type="text" name="Gasto" id="gasto" placeholder="Cena fuera">
+            <label for="amount">Amount</label>
+            <input type="number" name="Amount" id="amount" placeholder="27€">
 
-            <label for="importe">Importe</label>
-            <input type="number" name="Importe" id="importe" placeholder="27€">
-
-            <label for="categoria">Categoria</label>
-                <select name="Categoria" id="categoria">
-                    <option value="comida">Comida</option>
-                    <option value="suscripcion">Suscripcion</option>
-                    <option value="transporte">Transporte</option>
-                    <option value="regalo">Regalo</option>
-                    <option value="entretenimiento">Entretenimiento</option>
-                    <option value="ropa">Ropa</option>
-                    <option value="deporte">Deporte</option>
-                    <option value="inversion">Inversion</option>
-                    <option value="otros">Otros</option>
+            <label for="category">Category</label>
+                <select name="Category" id="category">
+                    <option value="food">Food</option>
+                    <option value="subscription">Subscription</option>
+                    <option value="transport">Transport</option>
+                    <option value="gift">Gift</option>
+                    <option value="entertainment">Entertainment</option>
+                    <option value="clothes">Clothes</option>
+                    <option value="sport">Sport</option>
+                    <option value="investment">Investment</option>
+                    <option value="others">Others</option>
                 </select>
 
-            <label for="descripcion">Descripcion</label>
-            <input type="text" name="Descripcion" id="descripcion" placeholder="Cena fuera con amigos">
+            <label for="description">Description</label>
+            <input type="text" name="Description" id="description" placeholder="Dinner party with friends">
             
-            <label for="fecha">Fecha</label>
-            <input type="date" name="Fecha" id="fecha">
+            <label for="date">Date</label>
+            <input type="date" name="Date" id="date">
 
         </form>
+
+        <div>
+            <h2>Expenses List</h2>
+
+            <ul>
+                <li>
+                    <div class="card">
+                        <p>🥳</p>
+                        <p>Description</p>
+                        <h4>23€</h4>
+                    </div>
+                </li>
+                <li>
+                    <div class="card">
+                        <p>🥳</p>
+                        <p>Description</p>
+                        <h4>23€</h4>
+                    </div>
+                </li>
+                <li>
+                    <div class="card">
+                        <p>🥳</p>
+                        <p>Description</p>
+                        <h4>23€</h4>
+                    </div>
+                </li>
+                <li>
+                    <div class="card">
+                        <p>🥳</p>
+                        <p>Description</p>
+                        <h4>23€</h4>
+                    </div>
+                </li>
+                <li>
+                    <div class="card">
+                        <p>🥳</p>
+                        <p>Description</p>
+                        <h4>23€</h4>
+                    </div>
+                </li>
+                <li>
+                    <div class="card">
+                        <p>🥳</p>
+                        <p>Description</p>
+                        <h4>23€</h4>
+                    </div>
+                </li>
+               
+            </ul>
+
+        </div>
 
     </main>
 
