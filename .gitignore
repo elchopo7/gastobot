@@ -1,0 +1,56 @@
+# Dependencias
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Logs
+logs/
+*.log
+
+# Archivos de entorno
+.env
+.env.*
+!.env.example
+
+# Archivos de sistema
+.DS_Store
+Thumbs.db
+
+# Coverage / testing
+coverage/
+.nyc_output/
+
+# Build / producción
+dist/
+build/
+
+# Archivos temporales
+tmp/
+temp/
+
+# IDEs / editores
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Archivos de configuración local
+*.local
+
+# Archivos de cache
+.cache/
+.parcel-cache/
+
+# TypeScript (si aplica)
+*.tsbuildinfo
+
+# PM2
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Archivos de subida (si usas uploads)
+uploads/
