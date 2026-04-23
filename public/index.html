@@ -18,76 +18,119 @@
 
     <main>
 
-        <form>
+        <section class="summary-card">
+            <p class="summary-card__label">Spent last month</p>
+            <h2 class="summary-card__amount">€1,245.80</h2>
+            <p class="summary-card__note">Based on your recorded expenses</p>
+        </section>
 
-            <label for="amount">Amount</label>
-            <input type="number" name="Amount" id="amount" placeholder="27€">
 
-            <label for="category">Category</label>
-                <select name="Category" id="category">
+        <div class="container">
+            <h1>New Expense</h1>
+
+            <form id="expense-form">
+                
+                <div>
+                    <label for="amount">Amount</label>
+                    <input 
+                    type="number" 
+                    id="amount" 
+                    name="amount" 
+                    placeholder="0.00" 
+                    step="0.01"
+                    required 
+                    />
+                </div>
+
+                <div>
+                    <label for="category">Category</label>
+                    <select id="category" name="category" required>
+                    <option value="">Select a category</option>
                     <option value="food">Food</option>
-                    <option value="subscription">Subscription</option>
                     <option value="transport">Transport</option>
-                    <option value="gift">Gift</option>
                     <option value="entertainment">Entertainment</option>
-                    <option value="clothes">Clothes</option>
-                    <option value="sport">Sport</option>
-                    <option value="investment">Investment</option>
-                    <option value="others">Others</option>
-                </select>
+                    <option value="housing">Housing</option>
+                    <option value="health">Health</option>
+                    <option value="education">Education</option>
+                    <option value="shopping">Shopping</option>
+                    <option value="other">Other</option>
+                    </select>
+                </div>
 
-            <label for="description">Description</label>
-            <input type="text" name="Description" id="description" placeholder="Dinner party with friends">
-            
-            <label for="date">Date</label>
-            <input type="date" name="Date" id="date">
+                <div>
+                    <label for="description">Description</label>
+                    <input 
+                    type="text" 
+                    id="description" 
+                    name="description" 
+                    placeholder="e.g. dinner with friends" 
+                    />
+                </div>
 
-        </form>
+                <div>
+                    <label for="date">Date</label>
+                    <input 
+                    type="date" 
+                    id="date" 
+                    name="date" 
+                    required 
+                    />
+                </div>
 
-        <div>
+                <button type="submit">Save Expense</button>
+            </form>
+        </div>
+
+        <div class="expenses-list">
             <h2>Expenses List</h2>
 
             <ul>
                 <li>
                     <div class="card">
-                        <p>🥳</p>
+                        <span class="expense-icon" aria-hidden="true">🥳</span>
                         <p>Description</p>
                         <h4>23€</h4>
+                        <button class="delete-btn" type="button">Delete</button>
                     </div>
                 </li>
                 <li>
                     <div class="card">
-                        <p>🥳</p>
+                        <span class="expense-icon" aria-hidden="true">🥳</span>
                         <p>Description</p>
                         <h4>23€</h4>
+                        <button class="delete-btn" type="button">Delete</button>
                     </div>
                 </li>
                 <li>
                     <div class="card">
-                        <p>🥳</p>
+                        <span class="expense-icon" aria-hidden="true">🥳</span>
                         <p>Description</p>
                         <h4>23€</h4>
+                        <button class="delete-btn" type="button">Delete</button>
                     </div>
                 </li>
                 <li>
                     <div class="card">
-                        <p>🥳</p>
+                        <span class="expense-icon" aria-hidden="true">🥳</span>
                         <p>Description</p>
                         <h4>23€</h4>
+                        <button class="delete-btn" type="button">Delete</button>
                     </div>
                 </li>
                 <li>
                     <div class="card">
-                        <p>🥳</p>
+                        <span class="expense-icon" aria-hidden="true">🥳</span>
                         <p>Description</p>
                         <h4>23€</h4>
+                        <button class="delete-btn" type="button">Delete</button>
                     </div>
                 </li>
                 <li>
                     <div class="card">
-                        <p>🥳</p>
+                        <span class="expense-icon" aria-hidden="true">🥳</span>
                         <p>Description</p>
                         <h4>23€</h4>
+                        <button class="delete-btn" type="button">Delete</button>
                     </div>
                 </li>
                
