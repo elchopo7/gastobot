@@ -4,7 +4,9 @@
   "description": "Bot to track expenses",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js",
+    "dev": "nodemon server/index.js"
   },
   "repository": {
     "type": "git",
@@ -17,5 +19,11 @@
   "bugs": {
     "url": "https://github.com/elchopo7/gastobot/issues"
   },
-  "homepage": "https://github.com/elchopo7/gastobot#readme"
+  "homepage": "https://github.com/elchopo7/gastobot#readme",
+  "dependencies": {
+    "express": "^5.2.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  }
 }
