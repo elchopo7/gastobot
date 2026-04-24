@@ -39,12 +39,13 @@ Implementar una interfaz web mobile-first funcional para registrar y visualizar 
 
 ### Tareas
 
-* [ ] Estructura HTML básica
-* [ ] Estilos CSS mobile-first
-* [ ] Formulario para añadir gasto
-* [ ] Lista de gastos
-* [ ] Filtros por categoría
-* [ ] Persistencia con localStorage
+* [X] Estructura HTML básica
+* [X] Estilos CSS mobile-first
+* [X] Formulario para añadir gasto
+* [X] Lista de gastos
+* [X] Filtros por categoría
+* [X] Total del mes visible
+* [X] Persistencia con localStorage
 
 ### Decisiones
 
