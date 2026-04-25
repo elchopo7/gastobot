@@ -21,10 +21,10 @@
   },
   "homepage": "https://github.com/elchopo7/gastobot#readme",
   "dependencies": {
+    "better-sqlite3": "^12.9.0",
     "express": "^5.2.1"
   },
   "devDependencies": {
     "nodemon": "^3.1.14"
   }
 }
-

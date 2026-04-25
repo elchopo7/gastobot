@@ -55,13 +55,13 @@ Implementar una interfaz web mobile-first funcional para registrar y visualizar 
 
 ### Dudas / Bloqueos
 
-* Selector de categorías: dropdown vs chips
 * Estructura de datos en localStorage que facilite migración a backend
 
 ### Aprendizajes
 
 * Diferencias entre CSS Grid y Flexbox
 * Enfoque mobile-first con media queries (min-width)
+* LocalStorage setup
 
 ---
 
@@ -73,16 +73,13 @@ Implementar una API REST con Express para la gestión de gastos.
 
 ### Tareas
 
-* Configuración del servidor Express
-* Estructura por capas (routes, controllers, services)
-* Endpoints CRUD de gastos:
-
-  * POST /expenses
-  * GET /expenses
-  * GET /expenses/:id
-  * DELETE /expenses/:id
-* Validación de datos
-* Middleware de errores
+* [X] Configuración del servidor Express
+* [X] Endpoints CRUD de gastos:
+* [X] POST /expenses
+* [X] GET /expenses
+* [X] GET /expenses/:id
+* [X] DELETE /expenses/:id
+* [X] Validación de datos
 
 ### Decisiones pendientes
 
@@ -95,18 +92,21 @@ Implementar una API REST con Express para la gestión de gastos.
 ### Objetivo
 
 Persistir datos en base de datos (reemplazar localStorage).
+* Se ha decidido SQLite por su fácil integración y más rápida configuración, principalmente porque al principio
+no existirán distintos usuarios y así estará todo en un sólo archivo. Además más adelante si es necesario se puede
+migrar a Supabase.
 
 ### Tareas
 
-* Definir modelo de gasto:
-
-  * amount
-  * category
-  * date
-  * note
-* Integración con la base de datos
-* Migración desde localStorage
-
+* [X] Definir tabla de expenses: 
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        amount REAL NOT NULL,
+        category TEXT NOT NULL,
+        description TEXT NOT NULL,
+        date TEXT NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+* [X] Integración con la base de datos
+* [X] Migración desde localStorage
 ---
 
 ## Milestone M4 - Visualización
