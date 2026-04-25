@@ -1,48 +1,57 @@
-const STORAGE_KEY = "gastobot-expenses";
-
 const form = document.getElementById("expense-form");
 const expensesList = document.querySelector(".expenses-list ul");
 const monthlyAmount = document.querySelector(".summary-card__amount");
 
-let expenses = loadExpenses();
+let expenses = [];
 
-renderExpenses(expenses);
-renderMonthlyHighlight(expenses);
+(async function init() {
+  await loadExpenses();
+  renderExpenses(expenses);
+  renderMonthlyHighlight(expenses);
+})();
 
-form.addEventListener("submit", (event) => {
+form.addEventListener("submit", async (event) => {
   event.preventDefault();
 
   const formData = new FormData(form);
 
   const newExpense = {
-    id: Date.now(),
     amount: Number(formData.get("amount")),
     category: formData.get("category"),
     description: formData.get("description") || "No description",
     date: formData.get("date"),
   };
 
-  expenses.push(newExpense);
-  saveExpenses(expenses);
+  const response = await fetch("/api/expenses", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(newExpense),
+  });
 
+  if (!response.ok) return;
+
+  await loadExpenses();
   renderExpenses(expenses);
   renderMonthlyHighlight(expenses);
 
   form.reset();
 });
 
-function loadExpenses() {
-  const saved = localStorage.getItem(STORAGE_KEY);
-  return saved ? JSON.parse(saved) : [];
+async function loadExpenses() {
+  const response = await fetch("/api/expenses");
+  expenses = await response.json();
 }
 
-function saveExpenses(expenses) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(expenses));
-}
+async function deleteExpense(id) {
+  const response = await fetch(`/api/expenses/${id}`, {
+    method: "DELETE",
+  });
 
-function deleteExpense(id) {
-  expenses = expenses.filter((expense) => expense.id !== id);
-  saveExpenses(expenses);
+  if (!response.ok) return;
+
+  await loadExpenses();
   renderExpenses(expenses);
   renderMonthlyHighlight(expenses);
 }
@@ -74,11 +83,7 @@ function renderExpenses(expenses) {
   });
 }
 
-
 function renderMonthlyHighlight(expenses) {
-  const total = expenses.reduce((sum, expense) => {
-    return sum + expense.amount;
-  }, 0);
-
+  const total = expenses.reduce((sum, expense) => sum + Number(expense.amount), 0);
   monthlyAmount.textContent = `€${total.toFixed(2)}`;
 }
