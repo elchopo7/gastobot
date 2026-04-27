@@ -13,6 +13,29 @@ const getExpensesByMonth = db.prepare(`
   ORDER BY date DESC, created_at DESC, id DESC
 `);
 
+const getExpenseSummaryByMonth = db.prepare(`
+  SELECT category, SUM(amount) AS total
+  FROM expenses
+  WHERE date LIKE ?
+  GROUP BY category
+  ORDER BY total DESC, category ASC
+`);
+
+const getMonthlyEvolution = db.prepare(`
+  SELECT substr(date, 1, 7) AS month, SUM(amount) AS total
+  FROM expenses
+  WHERE date LIKE ?
+  GROUP BY month
+  ORDER BY month ASC
+`);
+
+const getMonthlyTotals = db.prepare(`
+  SELECT substr(date, 1, 7) AS month, SUM(amount) AS total
+  FROM expenses
+  GROUP BY month
+  ORDER BY month ASC
+`);
+
 const getExpenseById = db.prepare(`
   SELECT id, amount, category, description, date, created_at
   FROM expenses
@@ -41,6 +64,18 @@ function findAllExpenses() {
 
 function findExpensesByMonth(month) {
   return getExpensesByMonth.all(`${month}%`);
+}
+
+function getSummaryByMonth(month) {
+  return getExpenseSummaryByMonth.all(`${month}%`);
+}
+
+function getEvolutionByYear(year) {
+  return getMonthlyEvolution.all(`${year}-%`);
+}
+
+function getAllMonthlyTotals() {
+  return getMonthlyTotals.all();
 }
 
 function findExpenseById(id) {
@@ -88,6 +123,9 @@ function removeExpense(id) {
 module.exports = {
   findAllExpenses,
   findExpensesByMonth,
+  getSummaryByMonth,
+  getEvolutionByYear,
+  getAllMonthlyTotals,
   findExpenseById,
   addExpense,
   editExpense,

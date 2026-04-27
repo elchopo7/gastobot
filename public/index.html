@@ -18,88 +18,189 @@
 
     <main>
 
-        <section class="summary-card">
-            <p class="summary-card__label">Spent last month</p>
-            <h2 class="summary-card__amount">€1,245.80</h2>
-            <p class="summary-card__note">Based on your recorded expenses</p>
+        <section class="container month-picker" aria-label="Month selector">
+            <button id="month-prev" type="button" class="month-picker__button" aria-label="Previous month">
+                ←
+            </button>
+            <div class="month-picker__label">
+                <span class="month-picker__eyebrow">Selected month</span>
+                <strong id="month-label">----</strong>
+            </div>
+            <button id="month-next" type="button" class="month-picker__button" aria-label="Next month">
+                →
+            </button>
         </section>
 
+        <nav class="app-tabs" aria-label="App navigation">
+            <button id="tab-dashboard" class="app-tabs__button is-active" type="button">Dashboard</button>
+            <button id="tab-expenses" class="app-tabs__button" type="button">Gastos</button>
+            <button id="tab-report" class="app-tabs__button" type="button">Reporte</button>
+        </nav>
 
-        <div class="container">
-            <h1>New Expense</h1>
+        <section id="dashboard-view">
+            <section class="kpi-grid" aria-label="Key expense metrics">
+            <article class="kpi-card">
+                <p class="kpi-card__label">Monthly total</p>
+                <h2 class="kpi-card__value" id="kpi-month-total">€0.00</h2>
+                <p class="kpi-card__note" id="kpi-month-total-note">Current active month</p>
+            </article>
 
-            <form id="expense-form">
-                
-                <div>
-                    <label for="amount">Amount</label>
-                    <input 
-                    type="number" 
-                    id="amount" 
-                    name="amount" 
-                    placeholder="0.00" 
-                    step="0.01"
-                    required 
-                    />
-                </div>
+            <article class="kpi-card">
+                <p class="kpi-card__label">Average per day</p>
+                <h2 class="kpi-card__value" id="kpi-daily-average">€0.00</h2>
+                <p class="kpi-card__note" id="kpi-daily-average-note">This month</p>
+            </article>
 
-                <div>
-                    <label for="category">Category</label>
-                    <select id="category" name="category" required>
-                    <option value="">Select a category</option>
-                    <option value="food">Food</option>
-                    <option value="transport">Transport</option>
-                    <option value="entertainment">Entertainment</option>
-                    <option value="housing">Housing</option>
-                    <option value="health">Health</option>
-                    <option value="education">Education</option>
-                    <option value="shopping">Shopping</option>
-                    <option value="other">Other</option>
-                    </select>
-                </div>
+            <article class="kpi-card">
+                <p class="kpi-card__label">Top category</p>
+                <h2 class="kpi-card__value" id="kpi-top-category">-</h2>
+                <p class="kpi-card__note" id="kpi-top-category-note">Highest spending share</p>
+            </article>
+            </section>
 
-                <div>
-                    <label for="description">Description</label>
-                    <input 
-                    type="text" 
-                    id="description" 
-                    name="description" 
-                    placeholder="e.g. dinner with friends" 
-                    />
-                </div>
+            <section class="summary-card">
+                <p class="summary-card__label">Spent last month</p>
+                <h2 class="summary-card__amount">€1,245.80</h2>
+                <p class="summary-card__note">Based on your recorded expenses</p>
+            </section>
 
-                <div>
-                    <label for="date">Date</label>
-                    <input 
-                    type="date" 
-                    id="date" 
-                    name="date" 
-                    required 
-                    />
-                </div>
+            <section class="container">
+                <h1>Spending by category</h1>
+                <canvas id="expenses-chart" aria-label="Expenses by category chart" role="img"></canvas>
+            </section>
 
-                <button type="submit">Save Expense</button>
-            </form>
-        </div>
+            <section class="container">
+                <h1>Daily spending</h1>
+                <canvas id="daily-expenses-chart" aria-label="Daily expenses chart" role="img"></canvas>
+            </section>
 
-        <div class="expenses-list">
-            <h2>Expenses List</h2>
+            <section class="container">
+                <h1>Monthly evolution</h1>
+                <canvas id="monthly-evolution-chart" aria-label="Monthly evolution chart" role="img"></canvas>
+            </section>
+        </section>
 
-            <ul>
-                <li>
-                    <div class="card">
-                        <span class="expense-icon" aria-hidden="true">🥳</span>
-                        <p>Description</p>
-                        <h4>23€</h4>
-                        <button id="delete-btn" class="delete-btn" type="button">Delete</button>
+        <section id="expenses-view" class="is-hidden">
+            <div class="container">
+                <h1>New Expense</h1>
+
+                <form id="expense-form">
+                    
+                    <div>
+                        <label for="amount">Amount</label>
+                        <input 
+                        type="number" 
+                        id="amount" 
+                        name="amount" 
+                        placeholder="0.00" 
+                        step="0.01"
+                        required 
+                        />
                     </div>
-                </li>
-            </ul>
 
-        </div>
+                    <div>
+                        <label for="category">Category</label>
+                        <select id="category" name="category" required>
+                        <option value="">Select a category</option>
+                        <option value="food">Food</option>
+                        <option value="transport">Transport</option>
+                        <option value="entertainment">Entertainment</option>
+                        <option value="housing">Housing</option>
+                        <option value="health">Health</option>
+                        <option value="education">Education</option>
+                        <option value="shopping">Shopping</option>
+                        <option value="other">Other</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="description">Description</label>
+                        <input 
+                        type="text" 
+                        id="description" 
+                        name="description" 
+                        placeholder="e.g. dinner with friends" 
+                        />
+                    </div>
+
+                    <div>
+                        <label for="date">Date</label>
+                        <input 
+                        type="date" 
+                        id="date" 
+                        name="date" 
+                        required 
+                        />
+                    </div>
+
+                    <button type="submit">Save Expense</button>
+                </form>
+            </div>
+
+            <div class="expenses-list">
+                <h2>Expenses List</h2>
+
+                <ul>
+                    <li>
+                        <div class="card">
+                            <span class="expense-icon" aria-hidden="true">🥳</span>
+                            <p>Description</p>
+                            <h4>23€</h4>
+                            <button id="delete-btn" class="delete-btn" type="button">Delete</button>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </section>
+
+        <section id="report-view" class="report-view is-hidden">
+            <div class="container report-header">
+                <div>
+                    <p class="report-header__eyebrow">Monthly report</p>
+                    <h1 id="report-title">-</h1>
+                    <p class="report-header__note" id="report-subtitle">Shareable monthly summary</p>
+                </div>
+                <div class="report-header__actions">
+                    <button id="report-share" type="button" class="report-action">Share</button>
+                    <button id="report-export" type="button" class="report-action">Export</button>
+                </div>
+            </div>
+
+            <div class="kpi-grid">
+                <article class="kpi-card">
+                    <p class="kpi-card__label">Monthly total</p>
+                    <h2 class="kpi-card__value" id="report-total">€0.00</h2>
+                    <p class="kpi-card__note" id="report-total-note">Selected month</p>
+                </article>
+
+                <article class="kpi-card">
+                    <p class="kpi-card__label">Average per day</p>
+                    <h2 class="kpi-card__value" id="report-average">€0.00</h2>
+                    <p class="kpi-card__note" id="report-average-note">Active days</p>
+                </article>
+
+                <article class="kpi-card">
+                    <p class="kpi-card__label">Top category</p>
+                    <h2 class="kpi-card__value" id="report-top-category">-</h2>
+                    <p class="kpi-card__note" id="report-top-category-note">Highest spending share</p>
+                </article>
+            </div>
+
+            <section class="container report-panel">
+                <h1>Category breakdown</h1>
+                <ul id="report-category-list" class="report-list"></ul>
+            </section>
+
+            <section class="container report-panel">
+                <h1>Monthly trend</h1>
+                <canvas id="report-trend-chart" aria-label="Monthly trend chart" role="img"></canvas>
+            </section>
+        </section>
 
     </main>
 
-    <script src="app.js"></script>
+    <script src="/vendor/chart.umd.min.js"></script>
+    <script type="module" src="app.js"></script>
 </body>
 
 </html>

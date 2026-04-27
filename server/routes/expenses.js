@@ -2,6 +2,9 @@ const express = require("express");
 const {
   findAllExpenses,
   findExpensesByMonth,
+  getSummaryByMonth,
+  getEvolutionByYear,
+  getAllMonthlyTotals,
   findExpenseById,
   addExpense,
   editExpense,
@@ -56,6 +59,81 @@ router.get("/", (req, res) => {
   }
 
   res.json(findAllExpenses());
+});
+
+router.get("/summary", (req, res) => {
+  const { month } = req.query;
+
+  if (!month) {
+    return res.status(400).json({ message: "Month is required" });
+  }
+
+  if (!/^\d{4}-\d{2}$/.test(month)) {
+    return res.status(400).json({ message: "Invalid month format" });
+  }
+
+  const summary = getSummaryByMonth(month);
+  const totals = summary.reduce((acc, item) => {
+    acc[item.category] = Number(item.total);
+    return acc;
+  }, {});
+
+  res.json({
+    month,
+    totals,
+  });
+});
+
+router.get("/evolution", (req, res) => {
+  const year = String(req.query.year || new Date().getFullYear());
+
+  if (!/^\d{4}$/.test(year)) {
+    return res.status(400).json({ message: "Invalid year format" });
+  }
+
+  const evolution = getEvolutionByYear(year);
+  const totalsByMonth = evolution.reduce((acc, item) => {
+    acc[item.month] = Number(item.total);
+    return acc;
+  }, {});
+
+  const labels = Array.from({ length: 12 }, (_, index) => {
+    const monthNumber = String(index + 1).padStart(2, "0");
+    return `${year}-${monthNumber}`;
+  });
+
+  const totals = labels.map((month) => Number(totalsByMonth[month] || 0));
+
+  res.json({
+    year,
+    labels,
+    totals,
+  });
+});
+
+router.get("/monthly", (req, res) => {
+  const monthlyTotals = getAllMonthlyTotals();
+  const totalsByMonth = monthlyTotals.reduce((acc, item) => {
+    acc[item.month] = Number(item.total);
+    return acc;
+  }, {});
+
+  const today = new Date();
+  const labels = [];
+  const totals = [];
+
+  for (let offset = 5; offset >= 0; offset -= 1) {
+    const date = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth() - offset, 1));
+    const month = date.toISOString().slice(0, 7);
+
+    labels.push(month);
+    totals.push(Number(totalsByMonth[month] || 0));
+  }
+
+  res.json({
+    labels,
+    totals,
+  });
 });
 
 router.get("/:id", (req, res) => {

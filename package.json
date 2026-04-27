@@ -22,6 +22,7 @@
   "homepage": "https://github.com/elchopo7/gastobot#readme",
   "dependencies": {
     "better-sqlite3": "^12.9.0",
+    "chart.js": "^4.5.1",
     "express": "^5.2.1"
   },
   "devDependencies": {
