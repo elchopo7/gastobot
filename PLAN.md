@@ -117,10 +117,13 @@ Incorporar analítica básica de gastos.
 
 ### Tareas
 
-* Integración de Chart.js
-* Visualización por categorías
-* Resumen mensual
-* Filtros por fecha
+* [X] Integración de Chart.js
+* [X] Visualización por categorías
+* [X] Resumen mensual
+* [X] Filtros por fecha
+* [X] Navegación entre distintas tabs
+* [X] Vista de report mensual
+* [X] Funcionalidad de exportar y compartir monthly report
 
 ---
 
