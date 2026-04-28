@@ -58,6 +58,13 @@ const deleteExpense = db.prepare(`
   WHERE id = ?
 `);
 
+const getMonthlyComparison = db.prepare(`
+  SELECT substr(date, 1, 7) AS month, SUM(amount) AS total
+  FROM expenses
+  WHERE date LIKE ?
+  GROUP BY month
+`);
+
 function findAllExpenses() {
   return getExpenses.all();
 }
@@ -120,6 +127,21 @@ function removeExpense(id) {
   return expense;
 }
 
+function getComparisonTotals(month) {
+  const current = getMonthlyComparison.get(`${month}%`);
+  const [year, monthNumber] = month.split("-").map(Number);
+  const previousDate = new Date(Date.UTC(year, monthNumber - 2, 1));
+  const previousMonth = previousDate.toISOString().slice(0, 7);
+  const previous = getMonthlyComparison.get(`${previousMonth}%`);
+
+  return {
+    currentMonth: month,
+    currentTotal: Number(current?.total || 0),
+    previousMonth,
+    previousTotal: Number(previous?.total || 0),
+  };
+}
+
 module.exports = {
   findAllExpenses,
   findExpensesByMonth,
@@ -130,4 +152,5 @@ module.exports = {
   addExpense,
   editExpense,
   removeExpense,
+  getComparisonTotals,
 };

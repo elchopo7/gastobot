@@ -23,7 +23,7 @@
                 ←
             </button>
             <div class="month-picker__label">
-                <span class="month-picker__eyebrow">Selected month</span>
+                <span class="month-picker__eyebrow">Mes seleccionado</span>
                 <strong id="month-label">----</strong>
             </div>
             <button id="month-next" type="button" class="month-picker__button" aria-label="Next month">
@@ -42,13 +42,13 @@
             <article class="kpi-card">
                 <p class="kpi-card__label">Monthly total</p>
                 <h2 class="kpi-card__value" id="kpi-month-total">€0.00</h2>
-                <p class="kpi-card__note" id="kpi-month-total-note">Current active month</p>
+                <p class="kpi-card__note" id="kpi-month-total-note">Mes activo actual</p>
             </article>
 
             <article class="kpi-card">
                 <p class="kpi-card__label">Average per day</p>
                 <h2 class="kpi-card__value" id="kpi-daily-average">€0.00</h2>
-                <p class="kpi-card__note" id="kpi-daily-average-note">This month</p>
+                <p class="kpi-card__note" id="kpi-daily-average-note">Este mes</p>
             </article>
 
             <article class="kpi-card">
@@ -59,7 +59,7 @@
             </section>
 
             <section class="summary-card">
-                <p class="summary-card__label">Spent last month</p>
+                <p class="summary-card__label">Gastado el mes pasado</p>
                 <h2 class="summary-card__amount">€1,245.80</h2>
                 <p class="summary-card__note">Based on your recorded expenses</p>
             </section>
@@ -75,7 +75,7 @@
             </section>
 
             <section class="container">
-                <h1>Monthly evolution</h1>
+                <h1>Evolución mensual</h1>
                 <canvas id="monthly-evolution-chart" aria-label="Monthly evolution chart" role="img"></canvas>
             </section>
         </section>
@@ -137,8 +137,63 @@
                 </form>
             </div>
 
+            <section class="container filters-panel" aria-label="Expenses filters">
+                <div class="filters-panel__header">
+                    <h1>Filters</h1>
+                    <button id="filters-reset" type="button" class="filters-panel__reset">Reset</button>
+                </div>
+
+                <div class="filters-grid">
+                    <div class="filters-field">
+                        <label for="filter-search">Search</label>
+                        <input id="filter-search" type="search" placeholder="Search expenses" />
+                    </div>
+
+                    <div class="filters-field">
+                        <label for="filter-category">Category</label>
+                        <select id="filter-category">
+                            <option value="">All categories</option>
+                            <option value="food">Food</option>
+                            <option value="transport">Transport</option>
+                            <option value="entertainment">Entertainment</option>
+                            <option value="housing">Housing</option>
+                            <option value="health">Health</option>
+                            <option value="education">Education</option>
+                            <option value="shopping">Shopping</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+
+                    <div class="filters-field">
+                        <label for="filter-from">From</label>
+                        <input id="filter-from" type="date" />
+                    </div>
+
+                    <div class="filters-field">
+                        <label for="filter-to">To</label>
+                        <input id="filter-to" type="date" />
+                    </div>
+
+                    <div class="filters-field">
+                        <label for="filter-sort">Sort</label>
+                        <select id="filter-sort">
+                            <option value="">Newest first</option>
+                            <option value="amount-desc">Amount high to low</option>
+                            <option value="amount-asc">Amount low to high</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="filters-panel__actions">
+                    <button id="filters-apply" type="button">Apply filters</button>
+                    <button id="filters-export" type="button">Export CSV</button>
+                </div>
+                <p class="filters-panel__hint" id="filters-hint">Use any combination of filters and press Apply.</p>
+            </section>
+
             <div class="expenses-list">
-                <h2>Expenses List</h2>
+                <h2 id="expenses-list-title">Expenses List</h2>
+                <p class="expenses-list__meta" id="expenses-list-meta">All expenses</p>
 
                 <ul>
                     <li>
@@ -151,6 +206,33 @@
                     </li>
                 </ul>
             </div>
+
+            <section class="container comparison-panel" aria-labelledby="comparison-title">
+                <div class="comparison-panel__header">
+                    <div>
+                        <p class="comparison-panel__eyebrow">Comparison</p>
+                        <h1 id="comparison-title">Compare two months</h1>
+                    </div>
+                    <p class="comparison-panel__note">Choose two months and compare spending by category.</p>
+                </div>
+
+                <div class="comparison-panel__grid">
+                    <div class="filters-field">
+                        <label for="comparison-month-a">First month</label>
+                        <input type="month" id="comparison-month-a" />
+                    </div>
+                    <div class="filters-field">
+                        <label for="comparison-month-b">Second month</label>
+                        <input type="month" id="comparison-month-b" />
+                    </div>
+                </div>
+
+                <button id="comparison-apply" type="button">Compare months</button>
+
+                <div class="chart-wrap chart-wrap--comparison">
+                    <canvas id="comparison-chart" aria-label="Month comparison chart" role="img"></canvas>
+                </div>
+            </section>
         </section>
 
         <section id="report-view" class="report-view is-hidden">
@@ -170,13 +252,13 @@
                 <article class="kpi-card">
                     <p class="kpi-card__label">Monthly total</p>
                     <h2 class="kpi-card__value" id="report-total">€0.00</h2>
-                    <p class="kpi-card__note" id="report-total-note">Selected month</p>
+                    <p class="kpi-card__note" id="report-total-note">Mes seleccionado</p>
                 </article>
 
                 <article class="kpi-card">
                     <p class="kpi-card__label">Average per day</p>
                     <h2 class="kpi-card__value" id="report-average">€0.00</h2>
-                    <p class="kpi-card__note" id="report-average-note">Active days</p>
+                    <p class="kpi-card__note" id="report-average-note">Días activos</p>
                 </article>
 
                 <article class="kpi-card">
@@ -192,7 +274,7 @@
             </section>
 
             <section class="container report-panel">
-                <h1>Monthly trend</h1>
+                <h1>Tendencia mensual</h1>
                 <canvas id="report-trend-chart" aria-label="Monthly trend chart" role="img"></canvas>
             </section>
         </section>

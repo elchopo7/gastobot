@@ -5,6 +5,7 @@ const {
   getSummaryByMonth,
   getEvolutionByYear,
   getAllMonthlyTotals,
+  getComparisonTotals,
   findExpenseById,
   addExpense,
   editExpense,
@@ -48,17 +49,53 @@ function validateExpensePayload(payload) {
 }
 
 router.get("/", (req, res) => {
-  const { month } = req.query;
+  const { month, category, search, dateFrom, dateTo, sort, compare } = req.query;
+
+  let expenses = findAllExpenses();
 
   if (month) {
     if (!/^\d{4}-\d{2}$/.test(month)) {
       return res.status(400).json({ message: "Invalid month format" });
     }
 
-    return res.json(findExpensesByMonth(month));
+    expenses = findExpensesByMonth(month);
   }
 
-  res.json(findAllExpenses());
+  if (category) {
+    expenses = expenses.filter((expense) => expense.category === category);
+  }
+
+  if (search) {
+    const normalizedSearch = String(search).trim().toLowerCase();
+    expenses = expenses.filter((expense) => {
+      const haystack = `${expense.description} ${expense.category} ${expense.date}`.toLowerCase();
+      return haystack.includes(normalizedSearch);
+    });
+  }
+
+  if (dateFrom) {
+    expenses = expenses.filter((expense) => expense.date >= dateFrom);
+  }
+
+  if (dateTo) {
+    expenses = expenses.filter((expense) => expense.date <= dateTo);
+  }
+
+  if (sort === "amount-desc") {
+    expenses.sort((a, b) => b.amount - a.amount);
+  }
+
+  if (sort === "amount-asc") {
+    expenses.sort((a, b) => a.amount - b.amount);
+  }
+
+  const response = { expenses };
+
+  if (compare === "month-vs-previous" && month) {
+    response.comparison = getComparisonTotals(month);
+  }
+
+  res.json(response);
 });
 
 router.get("/summary", (req, res) => {

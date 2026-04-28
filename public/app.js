@@ -31,6 +31,20 @@ const reportCategoryList = document.getElementById("report-category-list");
 const reportShareButton = document.getElementById("report-share");
 const reportExportButton = document.getElementById("report-export");
 const reportTrendChartCanvas = document.getElementById("report-trend-chart");
+const filterSearch = document.getElementById("filter-search");
+const filterCategory = document.getElementById("filter-category");
+const filterFrom = document.getElementById("filter-from");
+const filterTo = document.getElementById("filter-to");
+const filterSort = document.getElementById("filter-sort");
+const comparisonMonthA = document.getElementById("comparison-month-a");
+const comparisonMonthB = document.getElementById("comparison-month-b");
+const comparisonApply = document.getElementById("comparison-apply");
+const comparisonCanvas = document.getElementById("comparison-chart");
+const filtersReset = document.getElementById("filters-reset");
+const filtersApply = document.getElementById("filters-apply");
+const filtersExport = document.getElementById("filters-export");
+const expensesListTitle = document.getElementById("expenses-list-title");
+const expensesListMeta = document.getElementById("expenses-list-meta");
 
 const categoryIcons = {
   food: "🍔",
@@ -60,18 +74,65 @@ let expensesChart;
 let dailyExpensesChart;
 let monthlyEvolutionChart;
 let reportTrendChart;
+let comparisonChart;
 let expenses = [];
 let selectedMonth = getMonthParam();
+let comparisonMonthAValue = getMonthParam();
+let comparisonMonthBValue = shiftMonth(getMonthParam(), -1);
 let currentView = "dashboard";
+let filters = {
+  search: "",
+  category: "",
+  dateFrom: "",
+  dateTo: "",
+  sort: "",
+};
 
 (async function init() {
-  await loadExpenses();
+  await loadExpensesList();
   selectedMonth = getMostRelevantMonth(expenses) || selectedMonth;
+  comparisonMonthAValue = selectedMonth;
+  comparisonMonthBValue = shiftMonth(selectedMonth, -1);
+  if (comparisonMonthA) comparisonMonthA.value = comparisonMonthAValue;
+  if (comparisonMonthB) comparisonMonthB.value = comparisonMonthBValue;
   updateMonthLabel();
   renderExpenses(expenses);
   await refreshDashboard();
+  await renderComparisonChart();
   renderView();
 })();
+
+filtersReset.addEventListener("click", () => {
+  filters = {
+    search: "",
+    category: "",
+    dateFrom: "",
+    dateTo: "",
+    sort: "",
+  };
+
+  filterSearch.value = "";
+  filterCategory.value = "";
+  filterFrom.value = "";
+  filterTo.value = "";
+  filterSort.value = "";
+
+  applyFilters();
+});
+
+filtersApply.addEventListener("click", applyFilters);
+
+if (filtersExport) {
+  filtersExport.addEventListener("click", exportFilteredExpensesToCsv);
+}
+
+if (comparisonApply) {
+  comparisonApply.addEventListener("click", async () => {
+    comparisonMonthAValue = comparisonMonthA?.value || comparisonMonthAValue;
+    comparisonMonthBValue = comparisonMonthB?.value || comparisonMonthBValue;
+    await renderComparisonChart();
+  });
+}
 
 dashboardTab.addEventListener("click", () => {
   currentView = "dashboard";
@@ -144,18 +205,41 @@ form.addEventListener("submit", async (event) => {
 
   if (!response.ok) return;
 
-  await loadExpenses();
-  selectedMonth = formData.get("date").slice(0, 7);
-  updateMonthLabel();
+  await loadExpensesList();
   renderExpenses(expenses);
   await refreshDashboard();
 
   form.reset();
 });
 
-async function loadExpenses() {
-  const response = await fetch("/api/expenses");
-  expenses = await response.json();
+async function loadExpensesList() {
+  const params = new URLSearchParams();
+
+  if (filters.search) params.set("search", filters.search);
+  if (filters.category) params.set("category", filters.category);
+  if (filters.dateFrom) params.set("dateFrom", filters.dateFrom);
+  if (filters.dateTo) params.set("dateTo", filters.dateTo);
+  if (filters.sort) params.set("sort", filters.sort);
+
+  const endpoint = params.toString()
+    ? `/api/expenses?${params.toString()}`
+    : "/api/expenses";
+
+  const response = await fetch(endpoint);
+  const data = await response.json();
+  expenses = Array.isArray(data) ? data : (data.expenses || []);
+  updateExpensesListHeader();
+}
+
+async function fetchExpensesForMonth(month) {
+  const response = await fetch(`/api/expenses?month=${month}`);
+
+  if (!response.ok) {
+    return [];
+  }
+
+  const data = await response.json();
+  return Array.isArray(data) ? data : (data.expenses || []);
 }
 
 async function deleteExpense(id) {
@@ -165,9 +249,7 @@ async function deleteExpense(id) {
 
   if (!response.ok) return;
 
-  await loadExpenses();
-  selectedMonth = getMostRelevantMonth(expenses) || selectedMonth;
-  updateMonthLabel();
+  await loadExpensesList();
   renderExpenses(expenses);
   await refreshDashboard();
 }
@@ -175,15 +257,30 @@ async function deleteExpense(id) {
 function renderExpenses(expenses) {
   expensesList.innerHTML = "";
 
+  if (!expenses.length) {
+    const empty = document.createElement("li");
+    empty.innerHTML = `
+      <div class="card card--empty">
+        <p>No expenses found</p>
+      </div>
+    `;
+    expensesList.appendChild(empty);
+    return;
+  }
+
   expenses.forEach((expense) => {
     const li = document.createElement("li");
     const icon = categoryIcons[expense.category] || "💸";
+    const formattedDate = formatFullDate(expense.date);
 
     li.innerHTML = `
       <div class="card">
         <span class="expense-icon" aria-hidden="true">${icon}</span>
         <p>${expense.description}</p>
-        <h4>€${expense.amount.toFixed(2)}</h4>
+        <div class="expense-meta">
+          <h4>€${expense.amount.toFixed(2)}</h4>
+          <span>${formattedDate}</span>
+        </div>
         <button class="delete-btn" type="button">Delete</button>
       </div>
     `;
@@ -203,6 +300,47 @@ function renderExpenses(expenses) {
 function renderMonthlyHighlight(expenses) {
   const total = expenses.reduce((sum, expense) => sum + Number(expense.amount), 0);
   monthlyAmount.textContent = `€${total.toFixed(2)}`;
+}
+
+function applyFilters() {
+  filters = {
+    search: filterSearch.value.trim(),
+    category: filterCategory.value,
+    dateFrom: filterFrom.value,
+    dateTo: filterTo.value,
+    sort: filterSort.value,
+  };
+
+  loadExpensesList().then(() => {
+    renderExpenses(expenses);
+    renderMonthlyHighlight(expenses);
+    refreshDashboard();
+  });
+}
+
+function exportFilteredExpensesToCsv() {
+  const rows = [
+    ["id", "description", "amount", "category", "date"],
+    ...expenses.map((expense) => [
+      expense.id,
+      expense.description,
+      Number(expense.amount).toFixed(2),
+      expense.category,
+      expense.date,
+    ]),
+  ];
+
+  const csv = rows
+    .map((row) => row.map(csvEscape).join(","))
+    .join("\n");
+
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `gastobot-filters-${selectedMonth}.csv`;
+  link.click();
+  URL.revokeObjectURL(url);
 }
 
 async function renderKpis() {
@@ -227,7 +365,7 @@ async function renderKpis() {
   const topCategoryAmount = topCategory ? Number(topCategory[1]) : 0;
 
   kpiMonthTotal.textContent = `€${monthTotal.toFixed(2)}`;
-  kpiMonthTotalNote.textContent = `${month} total`;
+  kpiMonthTotalNote.textContent = `${formatMonthLabel(month)} total`;
 
   kpiDailyAverage.textContent = `€${averagePerDay.toFixed(2)}`;
   kpiDailyAverageNote.textContent = `${uniqueDays} active day${uniqueDays === 1 ? "" : "s"}`;
@@ -238,6 +376,14 @@ async function renderKpis() {
 
 function getMonthParam(date = new Date()) {
   return date.toISOString().slice(0, 7);
+}
+
+function csvEscape(value) {
+  const text = String(value ?? "");
+  if (/[",\n]/.test(text)) {
+    return `"${text.replace(/"/g, '""')}"`;
+  }
+  return text;
 }
 
 function shiftMonth(month, delta) {
@@ -386,10 +532,10 @@ async function renderCharts() {
   monthlyEvolutionChart = new Chart(monthlyEvolutionChartCanvas, {
     type: "line",
     data: {
-      labels: evolutionData.labels,
+      labels: evolutionData.labels.map(formatMonthLabel),
       datasets: [
         {
-          label: `Monthly spending ${year}`,
+          label: `Evolución ${year}`,
           data: evolutionData.totals,
           borderColor: "#2563eb",
           backgroundColor: "rgba(37, 99, 235, 0.15)",
@@ -442,7 +588,7 @@ async function renderReport() {
   reportTitle.textContent = formatMonthLabel(month);
   reportSubtitle.textContent = `${monthExpenses.length} expense${monthExpenses.length === 1 ? "" : "s"} in this period`;
   reportTotal.textContent = `€${monthTotal.toFixed(2)}`;
-  reportTotalNote.textContent = `${month} total`;
+  reportTotalNote.textContent = `${formatMonthLabel(month)} total`;
   reportAverage.textContent = `€${averagePerDay.toFixed(2)}`;
   reportAverageNote.textContent = `${uniqueDays} active day${uniqueDays === 1 ? "" : "s"}`;
   reportTopCategory.textContent = topCategory ? topCategory[0] : "-";
@@ -475,10 +621,10 @@ async function renderReport() {
   reportTrendChart = new Chart(reportTrendChartCanvas, {
     type: "line",
     data: {
-      labels: evolutionData.labels,
+      labels: evolutionData.labels.map(formatMonthLabel),
       datasets: [
         {
-          label: "Monthly spending",
+          label: "Tendencia mensual",
           data: evolutionData.totals,
           borderColor: "#2563eb",
           backgroundColor: "rgba(37, 99, 235, 0.12)",
@@ -498,16 +644,127 @@ async function renderReport() {
   });
 }
 
+function getDaysInMonth(month) {
+  const [year, monthNumber] = month.split("-").map(Number);
+  return new Date(Date.UTC(year, monthNumber, 0)).getUTCDate();
+}
+
+function buildDailyTotals(expenses, month) {
+  const daysInMonth = getDaysInMonth(month);
+  const totals = Array.from({ length: daysInMonth }, () => 0);
+
+  expenses.forEach((expense) => {
+    const day = Number(expense.date?.slice(8, 10));
+    if (day >= 1 && day <= daysInMonth) {
+      totals[day - 1] += Number(expense.amount || 0);
+    }
+  });
+
+  return totals;
+}
+
+async function renderComparisonChart() {
+  if (!comparisonCanvas || !window.Chart) {
+    return;
+  }
+
+  const monthA = comparisonMonthA?.value || comparisonMonthAValue || getMonthParam();
+  const monthB = comparisonMonthB?.value || comparisonMonthBValue || shiftMonth(monthA, -1);
+
+  const [expensesA, expensesB] = await Promise.all([
+    fetchExpensesForMonth(monthA),
+    fetchExpensesForMonth(monthB),
+  ]);
+
+  const daysInChart = Math.max(getDaysInMonth(monthA), getDaysInMonth(monthB));
+  const labels = Array.from({ length: daysInChart }, (_, index) => String(index + 1));
+  const dataA = buildDailyTotals(expensesA, monthA);
+  const dataB = buildDailyTotals(expensesB, monthB);
+
+  if (comparisonChart) {
+    comparisonChart.destroy();
+  }
+
+  comparisonChart = new Chart(comparisonCanvas, {
+    type: "line",
+    data: {
+      labels,
+      datasets: [
+        {
+          label: formatMonthLabel(monthA),
+          data: dataA,
+          borderColor: "#2563eb",
+          backgroundColor: "rgba(37, 99, 235, 0.12)",
+          tension: 0.35,
+          fill: true,
+          pointRadius: 3,
+          pointHoverRadius: 5,
+        },
+        {
+          label: formatMonthLabel(monthB),
+          data: dataB,
+          borderColor: "#f97316",
+          backgroundColor: "rgba(249, 115, 22, 0.12)",
+          tension: 0.35,
+          fill: true,
+          pointRadius: 3,
+          pointHoverRadius: 5,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: "bottom",
+        },
+      },
+      scales: {
+        x: {
+          title: {
+            display: true,
+            text: "Day of month",
+          },
+        },
+        y: {
+          beginAtZero: true,
+          title: {
+            display: true,
+            text: "Expense",
+          },
+        },
+      },
+    },
+  });
+}
+
 function formatMonthLabel(month) {
   const [year, monthNumber] = month.split("-").map(Number);
   const date = new Date(Date.UTC(year, monthNumber - 1, 1));
   const formattedMonth = new Intl.DateTimeFormat("es-ES", {
     month: "long",
+    timeZone: "UTC",
+  }).format(date);
+
+  return `${formattedMonth.charAt(0).toUpperCase() + formattedMonth.slice(1)} ${year}`;
+}
+
+function formatFullDate(dateValue) {
+  if (!dateValue) {
+    return "-";
+  }
+
+  const [year, monthNumber, day] = dateValue.split("-").map(Number);
+  const date = new Date(Date.UTC(year, monthNumber - 1, day));
+  const formattedDate = new Intl.DateTimeFormat("es-ES", {
+    day: "numeric",
+    month: "long",
     year: "numeric",
     timeZone: "UTC",
   }).format(date);
 
-  return formattedMonth.charAt(0).toUpperCase() + formattedMonth.slice(1);
+  return formattedDate.charAt(0).toUpperCase() + formattedDate.slice(1);
 }
 
 function buildReportShareText() {
@@ -536,4 +793,19 @@ function getMostRelevantMonth(expenses) {
   }
 
   return expenses[0]?.date?.slice(0, 7) || null;
+}
+
+function updateExpensesListHeader() {
+  const activeFilters = [
+    filters.search && `search: ${filters.search}`,
+    filters.category && `category: ${filters.category}`,
+    filters.dateFrom && `from: ${filters.dateFrom}`,
+    filters.dateTo && `to: ${filters.dateTo}`,
+    filters.sort && `sort: ${filters.sort}`,
+  ].filter(Boolean);
+
+  expensesListTitle.textContent = activeFilters.length ? "Filtered expenses" : "Expenses List";
+  expensesListMeta.textContent = activeFilters.length
+    ? activeFilters.join(" · ")
+    : "All expenses";
 }

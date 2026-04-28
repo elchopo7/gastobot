@@ -120,6 +120,108 @@ h1 {
   margin: 16px auto;
 }
 
+.filters-panel {
+  display: grid;
+  gap: 14px;
+}
+
+.filters-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.filters-panel__header h1 {
+  margin: 0;
+}
+
+.filters-panel__reset {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--primary);
+  border: 1px solid var(--border);
+}
+
+.filters-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.filters-field {
+  display: grid;
+  gap: 6px;
+}
+
+.filters-panel__hint {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #6b7280;
+}
+
+.comparison-panel {
+  display: grid;
+  gap: 14px;
+}
+
+.comparison-panel__header {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.comparison-panel__eyebrow {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.comparison-panel__header h1 {
+  margin: 0;
+}
+
+.comparison-panel__note {
+  margin: 0;
+  color: #6b7280;
+  line-height: 1.5;
+}
+
+.comparison-panel__grid {
+  display: grid;
+  gap: 12px;
+}
+
+.chart-wrap--comparison {
+  min-height: 280px;
+}
+
+.filters-panel__actions {
+  display: flex;
+  gap: 8px;
+}
+
+.filters-panel__actions button {
+  margin: 0;
+  flex: 1;
+}
+
+.filters-panel__actions button:last-child {
+  background: transparent;
+  color: var(--primary);
+  border: 1px solid var(--border);
+}
+
+.expenses-list__meta {
+  margin: 4px 0 12px;
+  font-size: 0.9rem;
+  color: #6b7280;
+}
+
 .kpi-card {
   padding: 16px;
   border-radius: 16px;
@@ -233,10 +335,6 @@ button:active {
   color: #6b7280;
 }
 
-.report-view {
-  display: block;
-}
-
 .report-header {
   display: flex;
   flex-direction: column;
@@ -346,6 +444,29 @@ ul li div.card {
   width: 100%;
 }
 
+.expense-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.expense-meta h4 {
+  margin: 0;
+}
+
+.expense-meta span {
+  color: #6b7280;
+  font-size: 0.82rem;
+}
+
+.card--empty {
+  justify-content: center;
+  color: #6b7280;
+  background: #f8fafc;
+  min-height: 72px;
+}
+
 .delete-btn {
   padding: 0.5rem 0.75rem;
   border: none;
@@ -380,6 +501,10 @@ ul li div.card {
 
   .kpi-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .filters-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   ul {
