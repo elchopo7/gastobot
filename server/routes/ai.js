@@ -4,25 +4,24 @@ const { askOpenAI } = require("../ai/openai");
 
 const router = express.Router();
 
-function buildSummary(month) {
-  const expenses = findAllExpenses().filter((expense) =>
-    expense.date?.startsWith(month)
-  );
+async function buildSummary(month) {
+  const expenses = await findAllExpenses();
+  const monthExpenses = expenses.filter((expense) => expense.date?.startsWith(month));
 
-  const byCategory = expenses.reduce((acc, expense) => {
+  const byCategory = monthExpenses.reduce((acc, expense) => {
     acc[expense.category] = (acc[expense.category] || 0) + Number(expense.amount || 0);
     return acc;
   }, {});
 
-  const categoryRows = getSummaryByMonth(month).map((item) => ({
+  const categoryRows = (await getSummaryByMonth(month)).map((item) => ({
     category: item.category,
     total: Number(item.total || 0),
   }));
 
   return {
     month,
-    total: expenses.reduce((sum, expense) => sum + Number(expense.amount || 0), 0),
-    expenseCount: expenses.length,
+    total: monthExpenses.reduce((sum, expense) => sum + Number(expense.amount || 0), 0),
+    expenseCount: monthExpenses.length,
     byCategory,
     categoryRows,
   };
@@ -40,7 +39,7 @@ router.post("/expenses-question", async (req, res) => {
   }
 
   try {
-    const summary = buildSummary(month);
+    const summary = await buildSummary(month);
     const answer = await askOpenAI({
       summary,
       question: question.trim(),

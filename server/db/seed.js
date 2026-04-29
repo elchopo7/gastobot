@@ -1,4 +1,3 @@
-const db = require("./setup");
 const { addExpense, findAllExpenses } = require("./expenses");
 
 const seedExpenses = [
@@ -22,15 +21,15 @@ const seedExpenses = [
   },
 ];
 
-function seedDatabase() {
-  const count = db.prepare("SELECT COUNT(*) as count FROM expenses").get().count;
+async function seedDatabase() {
+  const existingExpenses = await findAllExpenses();
 
-  if (count > 0) {
+  if (existingExpenses.length > 0) {
     return;
   }
 
   for (const expense of seedExpenses) {
-    addExpense(expense);
+    await addExpense(expense);
   }
 }
 

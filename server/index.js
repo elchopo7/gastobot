@@ -82,7 +82,7 @@ if (TELEGRAM_BOT_TOKEN) {
 
   const sendMonthlyReport = async (ctx) => {
     const month = new Date().toISOString().slice(0, 7);
-    const summary = getSummaryByMonth(month);
+    const summary = await getSummaryByMonth(month);
     const total = summary.reduce((sum, item) => sum + Number(item.total || 0), 0);
     const lines = [`Reporte de ${formatMonthLabel(month)}`, `Total: €${total.toFixed(2)}`];
 
@@ -99,8 +99,8 @@ if (TELEGRAM_BOT_TOKEN) {
 
   bot.command("reporte", sendMonthlyReport);
 
-  bot.hears(/^\/(ultimos|últimos)$/i, (ctx) => {
-    const recent = findAllExpenses().slice(0, 5);
+  bot.hears(/^\/(ultimos|últimos)$/i, async (ctx) => {
+    const recent = (await findAllExpenses()).slice(0, 5);
 
     if (!recent.length) {
       ctx.reply("Todavía no hay gastos registrados.");
@@ -146,7 +146,7 @@ if (TELEGRAM_BOT_TOKEN) {
       return;
     }
 
-    const createdExpense = addExpense({
+    const createdExpense = await addExpense({
       amount: parsed.amount,
       category: parsed.category,
       description: parsed.description,
@@ -179,7 +179,7 @@ if (TELEGRAM_BOT_TOKEN) {
 
     pendingExpenses.delete(ctx.chat.id);
 
-    const createdExpense = addExpense({
+    const createdExpense = await addExpense({
       amount: pending.amount,
       category,
       description: pending.description,

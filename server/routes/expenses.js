@@ -48,17 +48,21 @@ function validateExpensePayload(payload) {
   };
 }
 
-router.get("/", (req, res) => {
+router.get("/", async (req, res) => {
   const { month, category, search, dateFrom, dateTo, sort, compare } = req.query;
-
-  let expenses = findAllExpenses();
 
   if (month) {
     if (!/^\d{4}-\d{2}$/.test(month)) {
       return res.status(400).json({ message: "Invalid month format" });
     }
+  }
 
-    expenses = findExpensesByMonth(month);
+  let expenses = [];
+
+  try {
+    expenses = month ? await findExpensesByMonth(month) : await findAllExpenses();
+  } catch (error) {
+    return res.status(500).json({ message: "Failed to load expenses", error: error.message });
   }
 
   if (category) {
@@ -92,13 +96,13 @@ router.get("/", (req, res) => {
   const response = { expenses };
 
   if (compare === "month-vs-previous" && month) {
-    response.comparison = getComparisonTotals(month);
+    response.comparison = await getComparisonTotals(month);
   }
 
   res.json(response);
 });
 
-router.get("/summary", (req, res) => {
+router.get("/summary", async (req, res) => {
   const { month } = req.query;
 
   if (!month) {
@@ -109,7 +113,7 @@ router.get("/summary", (req, res) => {
     return res.status(400).json({ message: "Invalid month format" });
   }
 
-  const summary = getSummaryByMonth(month);
+  const summary = await getSummaryByMonth(month);
   const totals = summary.reduce((acc, item) => {
     acc[item.category] = Number(item.total);
     return acc;
@@ -121,14 +125,14 @@ router.get("/summary", (req, res) => {
   });
 });
 
-router.get("/evolution", (req, res) => {
+router.get("/evolution", async (req, res) => {
   const year = String(req.query.year || new Date().getFullYear());
 
   if (!/^\d{4}$/.test(year)) {
     return res.status(400).json({ message: "Invalid year format" });
   }
 
-  const evolution = getEvolutionByYear(year);
+  const evolution = await getEvolutionByYear(year);
   const totalsByMonth = evolution.reduce((acc, item) => {
     acc[item.month] = Number(item.total);
     return acc;
@@ -148,8 +152,8 @@ router.get("/evolution", (req, res) => {
   });
 });
 
-router.get("/monthly", (req, res) => {
-  const monthlyTotals = getAllMonthlyTotals();
+router.get("/monthly", async (req, res) => {
+  const monthlyTotals = await getAllMonthlyTotals();
   const totalsByMonth = monthlyTotals.reduce((acc, item) => {
     acc[item.month] = Number(item.total);
     return acc;
@@ -173,8 +177,8 @@ router.get("/monthly", (req, res) => {
   });
 });
 
-router.get("/:id", (req, res) => {
-  const expense = findExpenseById(req.params.id);
+router.get("/:id", async (req, res) => {
+  const expense = await findExpenseById(req.params.id);
 
   if (!expense) {
     return res.status(404).json({ message: "Expense not found" });
@@ -183,25 +187,25 @@ router.get("/:id", (req, res) => {
   res.json(expense);
 });
 
-router.post("/", (req, res) => {
+router.post("/", async (req, res) => {
   const expense = validateExpensePayload(req.body);
 
   if (!expense) {
     return res.status(400).json({ message: "Invalid expense data" });
   }
 
-  const createdExpense = addExpense(expense);
+  const createdExpense = await addExpense(expense);
   res.status(201).json(createdExpense);
 });
 
-router.put("/:id", (req, res) => {
+router.put("/:id", async (req, res) => {
   const expense = validateExpensePayload(req.body);
 
   if (!expense) {
     return res.status(400).json({ message: "Invalid expense data" });
   }
 
-  const updatedExpense = editExpense(req.params.id, expense);
+  const updatedExpense = await editExpense(req.params.id, expense);
 
   if (!updatedExpense) {
     return res.status(404).json({ message: "Expense not found" });
@@ -210,8 +214,8 @@ router.put("/:id", (req, res) => {
   res.json(updatedExpense);
 });
 
-router.delete("/:id", (req, res) => {
-  const deletedExpense = removeExpense(req.params.id);
+router.delete("/:id", async (req, res) => {
+  const deletedExpense = await removeExpense(req.params.id);
 
   if (!deletedExpense) {
     return res.status(404).json({ message: "Expense not found" });

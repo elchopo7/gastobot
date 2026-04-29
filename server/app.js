@@ -7,7 +7,9 @@ const { seedDatabase } = require("./db/seed");
 
 const app = express();
 
-seedDatabase();
+seedDatabase().catch((error) => {
+  console.error("Failed to seed expenses:", error.message || error);
+});
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "../public")));
