@@ -5,6 +5,7 @@ const { addExpense, findAllExpenses, getSummaryByMonth } = require("./db/expense
 
 const PORT = process.env.PORT || 3000;
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+const ENABLE_TELEGRAM_BOT = process.env.ENABLE_TELEGRAM_BOT === "true";
 const pendingExpenses = new Map();
 const categoryOptions = [
   { label: "Comida", value: "food" },
@@ -42,7 +43,7 @@ app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
 
-if (TELEGRAM_BOT_TOKEN) {
+if (TELEGRAM_BOT_TOKEN && ENABLE_TELEGRAM_BOT) {
   const bot = new Telegraf(TELEGRAM_BOT_TOKEN);
 
   bot.start((ctx) => {
@@ -209,7 +210,7 @@ if (TELEGRAM_BOT_TOKEN) {
   process.once("SIGINT", () => bot.stop("SIGINT"));
   process.once("SIGTERM", () => bot.stop("SIGTERM"));
 } else {
-  console.log("TELEGRAM_BOT_TOKEN not configured; bot disabled");
+  console.log("Telegram bot disabled");
 }
 
 function parseExpenseText(text) {
