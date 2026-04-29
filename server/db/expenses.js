@@ -132,7 +132,7 @@ async function addExpense(expense) {
     .single();
 
   if (error) {
-    throw error;
+    throw new Error(error.message || error.details || "Supabase insert failed");
   }
 
   return mapExpenseRow(data);
@@ -147,7 +147,7 @@ async function editExpense(id, expense) {
     .maybeSingle();
 
   if (error) {
-    throw error;
+    throw new Error(error.message || error.details || "Supabase update failed");
   }
 
   return mapExpenseRow(data);
@@ -163,7 +163,7 @@ async function removeExpense(id) {
   const { error } = await supabase.from("expenses").delete().eq("id", id);
 
   if (error) {
-    throw error;
+    throw new Error(error.message || error.details || "Supabase delete failed");
   }
 
   return expense;
