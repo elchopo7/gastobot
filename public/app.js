@@ -46,6 +46,7 @@ const filtersExport = document.getElementById("filters-export");
 const aiQuestion = document.getElementById("ai-question");
 const aiAskButton = document.getElementById("ai-ask");
 const aiResult = document.getElementById("ai-result");
+const expenseFormStatus = document.getElementById("expense-form-status");
 const expensesListTitle = document.getElementById("expenses-list-title");
 const expensesListMeta = document.getElementById("expenses-list-meta");
 
@@ -210,7 +211,19 @@ form.addEventListener("submit", async (event) => {
     body: JSON.stringify(newExpense),
   });
 
-  if (!response.ok) return;
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    if (expenseFormStatus) {
+      expenseFormStatus.textContent = errorData.message || "Could not save expense.";
+      expenseFormStatus.classList.add("form-status--error");
+    }
+    return;
+  }
+
+  if (expenseFormStatus) {
+    expenseFormStatus.textContent = "Expense saved.";
+    expenseFormStatus.classList.remove("form-status--error");
+  }
 
   await loadExpensesList();
   renderExpenses(expenses);

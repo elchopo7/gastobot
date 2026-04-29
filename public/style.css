@@ -266,6 +266,17 @@ h1 {
   line-height: 1.55;
 }
 
+.form-status {
+  margin: 0;
+  font-size: 0.92rem;
+  color: #6b7280;
+  min-height: 1.2em;
+}
+
+.form-status--error {
+  color: #dc2626;
+}
+
 .expenses-list__meta {
   margin: 4px 0 12px;
   font-size: 0.9rem;
