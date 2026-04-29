@@ -201,7 +201,7 @@ router.post("/", async (req, res) => {
     console.error("Failed to create expense:", error);
     res.status(500).json({
       message: "Failed to create expense",
-      error: error?.message || "Unknown error",
+      error: error?.message || error?.details || error?.hint || "Unknown error",
     });
   }
 });
@@ -225,7 +225,7 @@ router.put("/:id", async (req, res) => {
     console.error("Failed to update expense:", error);
     res.status(500).json({
       message: "Failed to update expense",
-      error: error?.message || "Unknown error",
+      error: error?.message || error?.details || error?.hint || "Unknown error",
     });
   }
 });
@@ -243,7 +243,7 @@ router.delete("/:id", async (req, res) => {
     console.error("Failed to delete expense:", error);
     res.status(500).json({
       message: "Failed to delete expense",
-      error: error?.message || "Unknown error",
+      error: error?.message || error?.details || error?.hint || "Unknown error",
     });
   }
 });

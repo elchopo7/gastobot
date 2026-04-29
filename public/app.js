@@ -213,8 +213,9 @@ form.addEventListener("submit", async (event) => {
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
+    const errorMessage = errorData.error || errorData.message || "Could not save expense.";
     if (expenseFormStatus) {
-      expenseFormStatus.textContent = errorData.message || "Could not save expense.";
+      expenseFormStatus.textContent = errorMessage;
       expenseFormStatus.classList.add("form-status--error");
     }
     return;
