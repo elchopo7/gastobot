@@ -194,8 +194,16 @@ router.post("/", async (req, res) => {
     return res.status(400).json({ message: "Invalid expense data" });
   }
 
-  const createdExpense = await addExpense(expense);
-  res.status(201).json(createdExpense);
+  try {
+    const createdExpense = await addExpense(expense);
+    res.status(201).json(createdExpense);
+  } catch (error) {
+    console.error("Failed to create expense:", error);
+    res.status(500).json({
+      message: "Failed to create expense",
+      error: error?.message || "Unknown error",
+    });
+  }
 });
 
 router.put("/:id", async (req, res) => {
@@ -205,23 +213,39 @@ router.put("/:id", async (req, res) => {
     return res.status(400).json({ message: "Invalid expense data" });
   }
 
-  const updatedExpense = await editExpense(req.params.id, expense);
+  try {
+    const updatedExpense = await editExpense(req.params.id, expense);
 
-  if (!updatedExpense) {
-    return res.status(404).json({ message: "Expense not found" });
+    if (!updatedExpense) {
+      return res.status(404).json({ message: "Expense not found" });
+    }
+
+    res.json(updatedExpense);
+  } catch (error) {
+    console.error("Failed to update expense:", error);
+    res.status(500).json({
+      message: "Failed to update expense",
+      error: error?.message || "Unknown error",
+    });
   }
-
-  res.json(updatedExpense);
 });
 
 router.delete("/:id", async (req, res) => {
-  const deletedExpense = await removeExpense(req.params.id);
+  try {
+    const deletedExpense = await removeExpense(req.params.id);
 
-  if (!deletedExpense) {
-    return res.status(404).json({ message: "Expense not found" });
+    if (!deletedExpense) {
+      return res.status(404).json({ message: "Expense not found" });
+    }
+
+    res.json(deletedExpense);
+  } catch (error) {
+    console.error("Failed to delete expense:", error);
+    res.status(500).json({
+      message: "Failed to delete expense",
+      error: error?.message || "Unknown error",
+    });
   }
-
-  res.json(deletedExpense);
 });
 
 module.exports = router;
