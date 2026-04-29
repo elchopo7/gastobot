@@ -52,9 +52,10 @@ router.post("/expenses-question", async (req, res) => {
       answer,
     });
   } catch (error) {
+    console.error("OpenAI request failed:", error);
     return res.status(500).json({
       message: "Failed to query OpenAI",
-      error: error.message,
+      error: error?.message || "Unknown OpenAI error",
     });
   }
 });

@@ -1,3 +1,4 @@
+require("dotenv").config();
 const { OpenAI } = require("openai");
 
 const client = new OpenAI({
@@ -9,22 +10,19 @@ async function askOpenAI({ summary, question }) {
     throw new Error("OPENAI_API_KEY is not configured");
   }
 
-  const response = await client.responses.create({
-    model: "gpt-4.1-mini",
-    input: [
-      {
-        role: "system",
-        content:
-          "Eres un asistente financiero para una app de gastos. Responde solo usando el resumen proporcionado. Si faltan datos, dilo claramente y no inventes cifras.",
-      },
-      {
-        role: "user",
-        content: `Resumen de gastos:\n${JSON.stringify(summary, null, 2)}\n\nPregunta del usuario: ${question}`,
-      },
-    ],
-  });
+  try {
+    const response = await client.responses.create({
+      model: "gpt-4o-mini",
+      instructions:
+        "Eres un asistente financiero para una app de gastos. Responde solo usando el resumen proporcionado. Si faltan datos, dilo claramente y no inventes cifras.",
+      input: `Resumen de gastos:\n${JSON.stringify(summary, null, 2)}\n\nPregunta del usuario: ${question}`,
+    });
 
-  return response.output_text || "";
+    return response.output_text || "";
+  } catch (error) {
+    const detail = error?.error?.message || error?.message || "Unknown OpenAI error";
+    throw new Error(detail);
+  }
 }
 
 module.exports = {

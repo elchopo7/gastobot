@@ -1,9 +1,9 @@
+require("dotenv").config();
 const express = require("express");
 const path = require("path");
 const expensesRouter = require("./routes/expenses");
 const aiRouter = require("./routes/ai");
 const { seedDatabase } = require("./db/seed");
-require("dotenv").config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;

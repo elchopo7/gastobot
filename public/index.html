@@ -191,6 +191,32 @@
                 <p class="filters-panel__hint" id="filters-hint">Use any combination of filters and press Apply.</p>
             </section>
 
+            <section class="container ai-panel" aria-labelledby="ai-title">
+                <div class="ai-panel__header">
+                    <div>
+                        <h1 id="ai-title">Ask about your expenses</h1>
+                        <p class="ai-panel__note">The assistant uses your monthly summary as real context.</p>
+                    </div>
+                </div>
+
+                <div class="ai-panel__form">
+                    <label for="ai-question">Question</label>
+                    <textarea
+                        id="ai-question"
+                        rows="3"
+                        placeholder="e.g. Which category am I spending the most on this month?"
+                    ></textarea>
+                </div>
+
+                <div class="ai-panel__actions">
+                    <button id="ai-ask" type="button">Ask AI</button>
+                </div>
+
+                <div class="ai-panel__result" id="ai-result" aria-live="polite">
+                    Ask a question to see the answer here.
+                </div>
+            </section>
+
             <div class="expenses-list">
                 <h2 id="expenses-list-title">Expenses List</h2>
                 <p class="expenses-list__meta" id="expenses-list-meta">All expenses</p>

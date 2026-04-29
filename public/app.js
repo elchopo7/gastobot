@@ -43,6 +43,9 @@ const comparisonCanvas = document.getElementById("comparison-chart");
 const filtersReset = document.getElementById("filters-reset");
 const filtersApply = document.getElementById("filters-apply");
 const filtersExport = document.getElementById("filters-export");
+const aiQuestion = document.getElementById("ai-question");
+const aiAskButton = document.getElementById("ai-ask");
+const aiResult = document.getElementById("ai-result");
 const expensesListTitle = document.getElementById("expenses-list-title");
 const expensesListMeta = document.getElementById("expenses-list-meta");
 
@@ -124,6 +127,10 @@ filtersApply.addEventListener("click", applyFilters);
 
 if (filtersExport) {
   filtersExport.addEventListener("click", exportFilteredExpensesToCsv);
+}
+
+if (aiAskButton) {
+  aiAskButton.addEventListener("click", askOpenAiAboutExpenses);
 }
 
 if (comparisonApply) {
@@ -341,6 +348,56 @@ function exportFilteredExpensesToCsv() {
   link.download = `gastobot-filters-${selectedMonth}.csv`;
   link.click();
   URL.revokeObjectURL(url);
+}
+
+async function askOpenAiAboutExpenses() {
+  const question = aiQuestion?.value.trim();
+
+  if (!question) {
+    aiResult.textContent = "Write a question first.";
+    return;
+  }
+
+  if (aiAskButton) {
+    aiAskButton.disabled = true;
+    aiAskButton.textContent = "Asking...";
+  }
+
+  if (aiResult) {
+    aiResult.textContent = "Thinking...";
+  }
+
+  try {
+    const response = await fetch("/api/ai/expenses-question", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        month: selectedMonth,
+        question,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || "AI request failed");
+    }
+
+    if (aiResult) {
+      aiResult.textContent = data.answer || "No answer returned.";
+    }
+  } catch (error) {
+    if (aiResult) {
+      aiResult.textContent = `Error: ${error.message}`;
+    }
+  } finally {
+    if (aiAskButton) {
+      aiAskButton.disabled = false;
+      aiAskButton.textContent = "Ask AI";
+    }
+  }
 }
 
 async function renderKpis() {
