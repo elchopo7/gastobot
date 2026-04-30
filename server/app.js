@@ -4,8 +4,20 @@ const path = require("path");
 const expensesRouter = require("./routes/expenses");
 const aiRouter = require("./routes/ai");
 const { seedDatabase } = require("./db/seed");
+const { createTelegramBot } = require("./telegram/bot");
+const { addExpense, findAllExpenses, getSummaryByMonth } = require("./db/expenses");
 
 const app = express();
+const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+const TELEGRAM_WEBHOOK_SECRET = process.env.TELEGRAM_WEBHOOK_SECRET;
+const telegramBot = TELEGRAM_BOT_TOKEN
+  ? createTelegramBot({
+      token: TELEGRAM_BOT_TOKEN,
+      addExpense,
+      findAllExpenses,
+      getSummaryByMonth,
+    })
+  : null;
 
 seedDatabase().catch((error) => {
   console.error("Failed to seed expenses:", error.message || error);
@@ -19,5 +31,20 @@ app.use(
 );
 app.use("/api/expenses", expensesRouter);
 app.use("/api/ai", aiRouter);
+
+app.post("/api/telegram-webhook", (req, res) => {
+  if (!telegramBot) {
+    return res.status(503).json({ ok: false, message: "Telegram bot not configured" });
+  }
+
+  if (TELEGRAM_WEBHOOK_SECRET) {
+    const incomingSecret = req.headers["x-telegram-bot-api-secret-token"];
+    if (incomingSecret !== TELEGRAM_WEBHOOK_SECRET) {
+      return res.status(401).json({ ok: false, message: "Unauthorized" });
+    }
+  }
+
+  return telegramBot.handleUpdate(req.body, res);
+});
 
 module.exports = app;
