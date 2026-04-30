@@ -283,6 +283,10 @@ h1 {
   color: #6b7280;
 }
 
+.expenses-list__meta--error {
+  color: #dc2626;
+}
+
 .kpi-card {
   padding: 16px;
   border-radius: 16px;

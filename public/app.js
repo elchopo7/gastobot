@@ -93,17 +93,25 @@ let filters = {
 };
 
 (async function init() {
-  await loadExpensesList();
-  selectedMonth = getMostRelevantMonth(expenses) || selectedMonth;
-  comparisonMonthAValue = selectedMonth;
-  comparisonMonthBValue = shiftMonth(selectedMonth, -1);
-  if (comparisonMonthA) comparisonMonthA.value = comparisonMonthAValue;
-  if (comparisonMonthB) comparisonMonthB.value = comparisonMonthBValue;
-  updateMonthLabel();
-  renderExpenses(expenses);
-  await refreshDashboard();
-  await renderComparisonChart();
-  renderView();
+  try {
+    await loadExpensesList();
+    selectedMonth = getMostRelevantMonth(expenses) || selectedMonth;
+    comparisonMonthAValue = selectedMonth;
+    comparisonMonthBValue = shiftMonth(selectedMonth, -1);
+    if (comparisonMonthA) comparisonMonthA.value = comparisonMonthAValue;
+    if (comparisonMonthB) comparisonMonthB.value = comparisonMonthBValue;
+    updateMonthLabel();
+    renderExpenses(expenses);
+    await refreshDashboard();
+    await renderComparisonChart();
+    renderView();
+  } catch (error) {
+    console.error("App init failed:", error);
+    if (expensesListMeta) {
+      expensesListMeta.textContent = error.message || "Failed to initialize app";
+      expensesListMeta.classList.add("expenses-list__meta--error");
+    }
+  }
 })();
 
 filtersReset.addEventListener("click", () => {
@@ -182,13 +190,21 @@ reportExportButton.addEventListener("click", () => {
 monthPrevButton.addEventListener("click", async () => {
   selectedMonth = shiftMonth(selectedMonth, -1);
   updateMonthLabel();
-  await refreshDashboard();
+  try {
+    await refreshDashboard();
+  } catch (error) {
+    console.error(error);
+  }
 });
 
 monthNextButton.addEventListener("click", async () => {
   selectedMonth = shiftMonth(selectedMonth, 1);
   updateMonthLabel();
-  await refreshDashboard();
+  try {
+    await refreshDashboard();
+  } catch (error) {
+    console.error(error);
+  }
 });
 
 form.addEventListener("submit", async (event) => {
@@ -247,8 +263,23 @@ async function loadExpensesList() {
     : "/api/expenses";
 
   const response = await fetch(endpoint);
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    const message = errorData.error || errorData.message || `Failed to load expenses (${response.status})`;
+    if (expensesListMeta) {
+      expensesListMeta.textContent = message;
+      expensesListMeta.classList.add("expenses-list__meta--error");
+    }
+    expenses = [];
+    updateExpensesListHeader();
+    return;
+  }
+
   const data = await response.json();
   expenses = Array.isArray(data) ? data : (data.expenses || []);
+  if (expensesListMeta) {
+    expensesListMeta.classList.remove("expenses-list__meta--error");
+  }
   updateExpensesListHeader();
 }
 
@@ -256,6 +287,8 @@ async function fetchExpensesForMonth(month) {
   const response = await fetch(`/api/expenses?month=${month}`);
 
   if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.error || errorData.message || `Failed to load month ${month}`);
     return [];
   }
 
@@ -323,7 +356,7 @@ function renderMonthlyHighlight(expenses) {
   monthlyAmount.textContent = `€${total.toFixed(2)}`;
 }
 
-function applyFilters() {
+async function applyFilters() {
   filters = {
     search: filterSearch.value.trim(),
     category: filterCategory.value,
@@ -332,11 +365,14 @@ function applyFilters() {
     sort: filterSort.value,
   };
 
-  loadExpensesList().then(() => {
+  try {
+    await loadExpensesList();
     renderExpenses(expenses);
     renderMonthlyHighlight(expenses);
-    refreshDashboard();
-  });
+    await refreshDashboard();
+  } catch (error) {
+    console.error("Failed to apply filters:", error);
+  }
 }
 
 function exportFilteredExpensesToCsv() {
@@ -419,6 +455,8 @@ async function renderKpis() {
   const summaryResponse = await fetch(`/api/expenses/summary?month=${month}`);
 
   if (!summaryResponse.ok) {
+    const errorData = await summaryResponse.json().catch(() => ({}));
+    throw new Error(errorData.error || errorData.message || `Failed to load summary for ${month}`);
     return;
   }
 
@@ -500,6 +538,8 @@ async function renderCharts() {
   const response = await fetch(`/api/expenses/summary?month=${month}`);
 
   if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.error || errorData.message || `Failed to load charts for ${month}`);
     return;
   }
 
@@ -591,6 +631,8 @@ async function renderCharts() {
   const evolutionResponse = await fetch(`/api/expenses/evolution?year=${year}`);
 
   if (!evolutionResponse.ok) {
+    const errorData = await evolutionResponse.json().catch(() => ({}));
+    throw new Error(errorData.error || errorData.message || `Failed to load evolution for ${year}`);
     return;
   }
 
@@ -643,6 +685,8 @@ async function renderReport() {
   const summaryResponse = await fetch(`/api/expenses/summary?month=${month}`);
 
   if (!summaryResponse.ok) {
+    const errorData = await summaryResponse.json().catch(() => ({}));
+    throw new Error(errorData.error || errorData.message || `Failed to load report for ${month}`);
     return;
   }
 
@@ -685,6 +729,8 @@ async function renderReport() {
 
   const evolutionResponse = await fetch(`/api/expenses/evolution?year=${month.slice(0, 4)}`);
   if (!evolutionResponse.ok) {
+    const errorData = await evolutionResponse.json().catch(() => ({}));
+    throw new Error(errorData.error || errorData.message || `Failed to load report trend for ${month.slice(0, 4)}`);
     return;
   }
 
