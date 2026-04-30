@@ -1,6 +1,7 @@
 const {
-  findAllExpenses,
-  addExpense,
+  findExpenseById,
+  editExpense,
+  removeExpense,
 } = require("../../server/db/expenses");
 
 const allowedCategories = new Set([
@@ -38,28 +39,54 @@ function validateExpensePayload(payload) {
 }
 
 module.exports = async function handler(req, res) {
+  const id = req.query.id || req.query[0] || req.query.path || req.query.slug;
+
+  if (!id) {
+    return res.status(400).json({ message: "Expense id is required" });
+  }
+
   try {
     if (req.method === "GET") {
-      const expenses = await findAllExpenses();
-      return res.status(200).json({ expenses });
+      const expense = await findExpenseById(id);
+
+      if (!expense) {
+        return res.status(404).json({ message: "Expense not found" });
+      }
+
+      return res.status(200).json(expense);
     }
 
-    if (req.method === "POST") {
+    if (req.method === "PUT") {
       const expense = validateExpensePayload(req.body || {});
 
       if (!expense) {
         return res.status(400).json({ message: "Invalid expense data" });
       }
 
-      const createdExpense = await addExpense(expense);
-      return res.status(201).json(createdExpense);
+      const updatedExpense = await editExpense(id, expense);
+
+      if (!updatedExpense) {
+        return res.status(404).json({ message: "Expense not found" });
+      }
+
+      return res.status(200).json(updatedExpense);
+    }
+
+    if (req.method === "DELETE") {
+      const deletedExpense = await removeExpense(id);
+
+      if (!deletedExpense) {
+        return res.status(404).json({ message: "Expense not found" });
+      }
+
+      return res.status(200).json(deletedExpense);
     }
 
     return res.status(405).json({ message: "Method not allowed" });
   } catch (error) {
-    console.error("Expenses root API error:", error);
+    console.error("Expense item API error:", error);
     return res.status(500).json({
-      message: "Failed to process expenses request",
+      message: "Failed to process expense item",
       error: error?.message || error?.details || error?.hint || "Unknown error",
     });
   }
