@@ -637,6 +637,8 @@ async function renderCharts() {
   }
 
   const evolutionData = await evolutionResponse.json();
+  const evolutionLabels = Array.isArray(evolutionData.labels) ? evolutionData.labels : [];
+  const evolutionTotals = Array.isArray(evolutionData.totals) ? evolutionData.totals : [];
 
   if (monthlyEvolutionChart) {
     monthlyEvolutionChart.destroy();
@@ -645,11 +647,11 @@ async function renderCharts() {
   monthlyEvolutionChart = new Chart(monthlyEvolutionChartCanvas, {
     type: "line",
     data: {
-      labels: evolutionData.labels.map(formatMonthLabel),
+      labels: evolutionLabels.map(formatMonthLabel),
       datasets: [
         {
           label: `Evolución ${year}`,
-          data: evolutionData.totals,
+          data: evolutionTotals,
           borderColor: "#2563eb",
           backgroundColor: "rgba(37, 99, 235, 0.15)",
           fill: true,
@@ -735,14 +737,16 @@ async function renderReport() {
   }
 
   const evolutionData = await evolutionResponse.json();
+  const evolutionLabels = Array.isArray(evolutionData.labels) ? evolutionData.labels : [];
+  const evolutionTotals = Array.isArray(evolutionData.totals) ? evolutionData.totals : [];
   reportTrendChart = new Chart(reportTrendChartCanvas, {
     type: "line",
     data: {
-      labels: evolutionData.labels.map(formatMonthLabel),
+      labels: evolutionLabels.map(formatMonthLabel),
       datasets: [
         {
           label: "Tendencia mensual",
-          data: evolutionData.totals,
+          data: evolutionTotals,
           borderColor: "#2563eb",
           backgroundColor: "rgba(37, 99, 235, 0.12)",
           fill: true,
