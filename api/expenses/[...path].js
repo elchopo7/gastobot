@@ -47,7 +47,12 @@ function validateExpensePayload(payload) {
 
 module.exports = async function handler(req, res) {
   const method = req.method || "GET";
-  const pathSegments = Array.isArray(req.query.path) ? req.query.path : [];
+  const rawPath = req.query.path;
+  const pathSegments = Array.isArray(rawPath)
+    ? rawPath
+    : rawPath
+      ? [rawPath]
+      : [];
   const [firstSegment] = pathSegments;
 
   try {
