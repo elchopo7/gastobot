@@ -52,8 +52,15 @@ h1 {
   gap: 8px;
   margin: 0 0 16px;
   position: sticky;
-  top: 12px;
-  z-index: 10;
+  top: 72px;
+  z-index: 9;
+  padding: 8px;
+  border: 1px solid rgba(229, 231, 235, 0.85);
+  border-radius: 18px;
+  background: rgba(249, 250, 251, 0.72);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 8px 24px rgba(17, 24, 39, 0.08);
 }
 
 .app-tabs__button {
@@ -79,10 +86,16 @@ h1 {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  background: white;
-  border: 1px solid var(--border);
-  border-radius: 16px;
+  position: sticky;
+  top: 12px;
+  z-index: 10;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(229, 231, 235, 0.85);
+  border-radius: 18px;
   box-shadow: 0 8px 24px rgba(17, 24, 39, 0.06);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
 }
 
 .month-picker__button {
@@ -198,6 +211,30 @@ h1 {
 
 .chart-wrap--comparison {
   min-height: 280px;
+}
+
+#expenses-chart {
+  max-height: 220px;
+}
+
+@media (min-width: 480px) {
+  #expenses-chart {
+    max-height: 240px;
+  }
+
+  .app-tabs {
+    top: 76px;
+  }
+}
+
+@media (min-width: 768px) {
+  #expenses-chart {
+    max-height: 260px;
+  }
+
+  .app-tabs {
+    top: 80px;
+  }
 }
 
 .filters-panel__actions {

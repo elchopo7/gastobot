@@ -31,6 +31,7 @@ const reportCategoryList = document.getElementById("report-category-list");
 const reportShareButton = document.getElementById("report-share");
 const reportExportButton = document.getElementById("report-export");
 const reportTrendChartCanvas = document.getElementById("report-trend-chart");
+const monthlyEvolutionTitle = document.getElementById("monthly-evolution-title");
 const filterSearch = document.getElementById("filter-search");
 const filterCategory = document.getElementById("filter-category");
 const filterFrom = document.getElementById("filter-from");
@@ -577,6 +578,7 @@ async function renderCharts() {
     },
     options: {
       responsive: true,
+      maintainAspectRatio: false,
       cutout: "65%",
       plugins: {
         legend: {
@@ -639,6 +641,9 @@ async function renderCharts() {
   const evolutionData = await evolutionResponse.json();
   const evolutionLabels = Array.isArray(evolutionData.labels) ? evolutionData.labels : [];
   const evolutionTotals = Array.isArray(evolutionData.totals) ? evolutionData.totals : [];
+  if (monthlyEvolutionTitle) {
+    monthlyEvolutionTitle.textContent = `Evolución mensual · ${year}`;
+  }
 
   if (monthlyEvolutionChart) {
     monthlyEvolutionChart.destroy();
@@ -647,7 +652,7 @@ async function renderCharts() {
   monthlyEvolutionChart = new Chart(monthlyEvolutionChartCanvas, {
     type: "line",
     data: {
-      labels: evolutionLabels.map(formatMonthLabel),
+      labels: evolutionLabels.map(formatMonthName),
       datasets: [
         {
           label: `Evolución ${year}`,
@@ -869,6 +874,17 @@ function formatMonthLabel(month) {
   }).format(date);
 
   return `${formattedMonth.charAt(0).toUpperCase() + formattedMonth.slice(1)} ${year}`;
+}
+
+function formatMonthName(month) {
+  const [year, monthNumber] = month.split("-").map(Number);
+  const date = new Date(Date.UTC(year, monthNumber - 1, 1));
+  const formattedMonth = new Intl.DateTimeFormat("es-ES", {
+    month: "long",
+    timeZone: "UTC",
+  }).format(date);
+
+  return formattedMonth.charAt(0).toUpperCase() + formattedMonth.slice(1);
 }
 
 function formatFullDate(dateValue) {
