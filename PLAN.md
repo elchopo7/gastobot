@@ -135,13 +135,12 @@ Permitir registro y consulta de gastos desde Telegram.
 
 ### Tareas
 
-* Configuración del bot con telegraf.js
-* Comandos para añadir gasto
-* Comandos de consulta:
-
-  * gastos este mes
-  * gastos por categoría
-* Integración con la API
+* [X] Configuración del bot con telegraf.js
+* [X] Comandos para añadir gasto
+* [X] Comandos de consulta:
+* [X]   gastos este mes
+* [X]   gastos por categoría
+* [X] Integración con la API
 
 ---
 
@@ -153,10 +152,9 @@ Publicar la aplicación.
 
 ### Tareas
 
-* Deploy en Vercel
-* Configuración de variables de entorno
-* Validación en entorno de producción
-
+* [X] Deploy en Vercel
+* [X] Configuración de variables de entorno
+* [X] Validación en entorno de producción
 ---
 
 ## Flujo de trabajo con Git
