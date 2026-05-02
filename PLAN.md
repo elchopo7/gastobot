@@ -155,6 +155,10 @@ Publicar la aplicación.
 * [X] Deploy en Vercel
 * [X] Configuración de variables de entorno
 * [X] Validación en entorno de producción
+* [X] Bot de Telegram adaptado al entorno
+* [X] Supabase vinculación total
+* [X] Testing de added expenses desde el bot y la web
+
 ---
 
 ## Flujo de trabajo con Git
