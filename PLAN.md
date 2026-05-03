@@ -175,13 +175,12 @@ Publicar la aplicación.
 
 ## Futuras mejoras
 
-* Autenticación de usuarios
-* Soporte multiusuario
-* Categorías personalizadas
-* Exportación a CSV
-* Notificaciones
-* Clasificación automática de gastos mediante IA
-
+* [ ] Autenticación de usuarios
+* [ ] Soporte multiusuario
+* [ ] Categorías personalizadas
+* [ ] Exportación a CSV
+* [ ] Notificaciones
+* [ ] Clasificación automática de gastos mediante IA
 ---
 
 ## Historial
