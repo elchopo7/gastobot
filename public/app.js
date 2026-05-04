@@ -32,6 +32,9 @@ const reportShareButton = document.getElementById("report-share");
 const reportExportButton = document.getElementById("report-export");
 const reportTrendChartCanvas = document.getElementById("report-trend-chart");
 const monthlyEvolutionTitle = document.getElementById("monthly-evolution-title");
+const themeToggle = document.getElementById("theme-toggle");
+const themeToggleIcon = themeToggle?.querySelector(".theme-toggle__icon");
+const themeToggleLabel = themeToggle?.querySelector(".theme-toggle__label");
 const filterSearch = document.getElementById("filter-search");
 const filterCategory = document.getElementById("filter-category");
 const filterFrom = document.getElementById("filter-from");
@@ -93,8 +96,13 @@ let filters = {
   sort: "",
 };
 
+const THEME_STORAGE_KEY = "gastobot-theme";
+const defaultTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+
 (async function init() {
   try {
+    applyTheme(getStoredTheme() || defaultTheme);
+    syncThemeToggle();
     await loadExpensesList();
     selectedMonth = getMostRelevantMonth(expenses) || selectedMonth;
     comparisonMonthAValue = selectedMonth;
@@ -114,6 +122,15 @@ let filters = {
     }
   }
 })();
+
+if (themeToggle) {
+  themeToggle.addEventListener("click", () => {
+    const nextTheme = getCurrentTheme() === "dark" ? "light" : "dark";
+    applyTheme(nextTheme);
+    saveTheme(nextTheme);
+    syncThemeToggle();
+  });
+}
 
 filtersReset.addEventListener("click", () => {
   filters = {
@@ -945,4 +962,46 @@ function updateExpensesListHeader() {
   expensesListMeta.textContent = activeFilters.length
     ? activeFilters.join(" · ")
     : "All expenses";
+}
+
+function getCurrentTheme() {
+  return document.documentElement.dataset.theme || "light";
+}
+
+function applyTheme(theme) {
+  document.documentElement.dataset.theme = theme === "dark" ? "dark" : "light";
+}
+
+function saveTheme(theme) {
+  try {
+    localStorage.setItem(THEME_STORAGE_KEY, theme);
+  } catch {
+    // Ignore storage failures.
+  }
+}
+
+function getStoredTheme() {
+  try {
+    const storedTheme = localStorage.getItem(THEME_STORAGE_KEY);
+    return storedTheme === "dark" || storedTheme === "light" ? storedTheme : null;
+  } catch {
+    return null;
+  }
+}
+
+function syncThemeToggle() {
+  const theme = getCurrentTheme();
+  const isDark = theme === "dark";
+
+  if (themeToggle) {
+    themeToggle.setAttribute("aria-pressed", String(isDark));
+  }
+
+  if (themeToggleIcon) {
+    themeToggleIcon.textContent = isDark ? "☀️" : "🌙";
+  }
+
+  if (themeToggleLabel) {
+    themeToggleLabel.textContent = isDark ? "Light" : "Dark";
+  }
 }
