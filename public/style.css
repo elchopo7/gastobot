@@ -445,7 +445,8 @@ select {
   border: 1px solid var(--border);
   border-radius: 8px;
   font-size: 1rem;
-  background: white;
+  background: var(--surface-elevated);
+  color: var(--text);
 }
 
 input:focus,
@@ -458,7 +459,7 @@ button {
   margin-top: 8px;
   padding: 14px;
   background: var(--primary);
-  color: white;
+  color: var(--button-text);
   border: none;
   border-radius: 8px;
   font-size: 1rem;
@@ -621,14 +622,14 @@ ul li div.card {
 }
 
 .expense-meta span {
-  color: #6b7280;
+  color: var(--text-muted);
   font-size: 0.82rem;
 }
 
 .card--empty {
   justify-content: center;
-  color: #6b7280;
-  background: #f8fafc;
+  color: var(--text-muted);
+  background: var(--surface-soft);
   min-height: 72px;
 }
 
@@ -637,7 +638,7 @@ ul li div.card {
   border: none;
   border-radius: 8px;
   background: #ef4444;
-  color: white;
+  color: var(--button-text);
   font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
@@ -682,5 +683,9 @@ ul li div.card {
 
   .month-picker {
     padding: 2px;
+  }
+
+  .theme-toggle {
+    padding: 10px 14px;
   }
 }
