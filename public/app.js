@@ -1,3 +1,5 @@
+import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+
 const form = document.getElementById("expense-form");
 const expensesList = document.querySelector(".expenses-list ul");
 const monthlyAmount = document.querySelector(".summary-card__amount");
@@ -35,6 +37,13 @@ const monthlyEvolutionTitle = document.getElementById("monthly-evolution-title")
 const themeToggle = document.getElementById("theme-toggle");
 const themeToggleIcon = themeToggle?.querySelector(".theme-toggle__icon");
 const themeToggleLabel = themeToggle?.querySelector(".theme-toggle__label");
+const authEmail = document.getElementById("auth-email");
+const authPassword = document.getElementById("auth-password");
+const authSignupButton = document.getElementById("auth-signup");
+const authSigninButton = document.getElementById("auth-signin");
+const authSignoutButton = document.getElementById("auth-signout");
+const authStatus = document.getElementById("auth-status");
+const authSessionState = document.getElementById("auth-session-state");
 const filterSearch = document.getElementById("filter-search");
 const filterCategory = document.getElementById("filter-category");
 const filterFrom = document.getElementById("filter-from");
@@ -98,11 +107,18 @@ let filters = {
 
 const THEME_STORAGE_KEY = "gastobot-theme";
 const defaultTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+const SUPABASE_URL = window.GASTOBOT_SUPABASE_URL;
+const SUPABASE_ANON_KEY = window.GASTOBOT_SUPABASE_ANON_KEY;
+const supabase =
+  SUPABASE_URL && SUPABASE_ANON_KEY && !SUPABASE_URL.includes("SUPABASE_URL_HERE")
+    ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+    : null;
 
 (async function init() {
   try {
     applyTheme(getStoredTheme() || defaultTheme);
     syncThemeToggle();
+    await syncAuthState();
     await loadExpensesList();
     selectedMonth = getMostRelevantMonth(expenses) || selectedMonth;
     comparisonMonthAValue = selectedMonth;
@@ -130,6 +146,18 @@ if (themeToggle) {
     saveTheme(nextTheme);
     syncThemeToggle();
   });
+}
+
+if (authSignupButton) {
+  authSignupButton.addEventListener("click", handleSignUp);
+}
+
+if (authSigninButton) {
+  authSigninButton.addEventListener("click", handleSignIn);
+}
+
+if (authSignoutButton) {
+  authSignoutButton.addEventListener("click", handleSignOut);
 }
 
 filtersReset.addEventListener("click", () => {
@@ -1004,4 +1032,134 @@ function syncThemeToggle() {
   if (themeToggleLabel) {
     themeToggleLabel.textContent = isDark ? "Light" : "Dark";
   }
+}
+
+async function syncAuthState() {
+  if (!supabase) {
+    setAuthStatus("Supabase client not configured.", true);
+    setAuthSessionLabel(null);
+    return;
+  }
+
+  const { data, error } = await supabase.auth.getSession();
+
+  if (error) {
+    setAuthStatus(error.message || "Failed to read session.", true);
+    setAuthSessionLabel(null);
+    return;
+  }
+
+  setAuthSessionLabel(data?.session?.user || null);
+  setAuthStatus(
+    data?.session?.user
+      ? "Signed in and ready."
+      : "Sign in or create an account to start using your personal workspace.",
+    false
+  );
+
+  supabase.auth.onAuthStateChange((_event, session) => {
+    setAuthSessionLabel(session?.user || null);
+  });
+}
+
+async function handleSignUp() {
+  if (!supabase) {
+    setAuthStatus("Supabase client not configured.", true);
+    return;
+  }
+
+  const email = authEmail?.value.trim();
+  const password = authPassword?.value;
+
+  if (!email || !password) {
+    setAuthStatus("Enter email and password.", true);
+    return;
+  }
+
+  setAuthStatus("Creating account...", false);
+
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+  });
+
+  if (error) {
+    setAuthStatus(error.message || "Could not create account.", true);
+    return;
+  }
+
+  if (data?.session) {
+    setAuthStatus("Account created and signed in.", false);
+  } else {
+    setAuthStatus("Account created. Check your email to confirm sign in.", false);
+  }
+
+  await syncAuthState();
+}
+
+async function handleSignIn() {
+  if (!supabase) {
+    setAuthStatus("Supabase client not configured.", true);
+    return;
+  }
+
+  const email = authEmail?.value.trim();
+  const password = authPassword?.value;
+
+  if (!email || !password) {
+    setAuthStatus("Enter email and password.", true);
+    return;
+  }
+
+  setAuthStatus("Signing in...", false);
+
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
+
+  if (error) {
+    setAuthStatus(error.message || "Could not sign in.", true);
+    return;
+  }
+
+  setAuthStatus(data?.user ? "Signed in successfully." : "Signed in.", false);
+  await syncAuthState();
+}
+
+async function handleSignOut() {
+  if (!supabase) {
+    setAuthStatus("Supabase client not configured.", true);
+    return;
+  }
+
+  setAuthStatus("Signing out...", false);
+
+  const { error } = await supabase.auth.signOut();
+
+  if (error) {
+    setAuthStatus(error.message || "Could not sign out.", true);
+    return;
+  }
+
+  setAuthStatus("Signed out.", false);
+  setAuthSessionLabel(null);
+}
+
+function setAuthStatus(message, isError = false) {
+  if (!authStatus) return;
+
+  authStatus.textContent = message;
+  authStatus.classList.toggle("form-status--error", isError);
+}
+
+function setAuthSessionLabel(user) {
+  if (!authSessionState) return;
+
+  if (!user) {
+    authSessionState.textContent = "Not signed in";
+    return;
+  }
+
+  authSessionState.textContent = user.email ? `Signed in as ${user.email}` : "Signed in";
 }

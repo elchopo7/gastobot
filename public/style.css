@@ -237,6 +237,55 @@ h1 {
   color: var(--text-muted);
 }
 
+.auth-panel {
+  display: grid;
+  gap: 14px;
+}
+
+.auth-panel__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.auth-panel__note {
+  margin: 8px 0 0;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.auth-panel__session {
+  padding: 8px 10px;
+  border-radius: 999px;
+  background: var(--surface-soft);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 0.84rem;
+  white-space: nowrap;
+}
+
+.auth-panel__grid {
+  display: grid;
+  gap: 12px;
+}
+
+.auth-field {
+  display: grid;
+  gap: 6px;
+}
+
+.auth-panel__actions {
+  display: grid;
+  gap: 8px;
+}
+
+.auth-panel__secondary {
+  background: transparent;
+  color: var(--primary);
+  border: 1px solid var(--border);
+}
+
 .comparison-panel {
   display: grid;
   gap: 14px;
@@ -671,6 +720,14 @@ ul li div.card {
 
   .filters-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .auth-panel__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .auth-panel__actions {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   ul {
