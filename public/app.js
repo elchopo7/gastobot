@@ -37,6 +37,7 @@ const monthlyEvolutionTitle = document.getElementById("monthly-evolution-title")
 const themeToggle = document.getElementById("theme-toggle");
 const themeToggleIcon = themeToggle?.querySelector(".theme-toggle__icon");
 const themeToggleLabel = themeToggle?.querySelector(".theme-toggle__label");
+const authPanel = document.querySelector(".auth-panel");
 const authEmail = document.getElementById("auth-email");
 const authPassword = document.getElementById("auth-password");
 const authSignupButton = document.getElementById("auth-signup");
@@ -160,6 +161,14 @@ if (authSigninButton) {
 
 if (authSignoutButton) {
   authSignoutButton.addEventListener("click", handleSignOut);
+}
+
+if (authSessionState) {
+  authSessionState.addEventListener("click", () => {
+    if (authSessionState.textContent !== "Not signed in") {
+      toggleAuthPanel();
+    }
+  });
 }
 
 filtersReset.addEventListener("click", () => {
@@ -1045,6 +1054,7 @@ async function syncAuthState() {
       true
     );
     setAuthSessionLabel(null);
+    openAuthPanel();
     return;
   }
 
@@ -1053,6 +1063,7 @@ async function syncAuthState() {
   if (error) {
     setAuthStatus(error.message || "Failed to read session.", true);
     setAuthSessionLabel(null);
+    openAuthPanel();
     return;
   }
 
@@ -1063,9 +1074,19 @@ async function syncAuthState() {
       : "Sign in or create an account to start using your personal workspace.",
     false
   );
+  if (data?.session?.user) {
+    closeAuthPanel();
+  } else {
+    openAuthPanel();
+  }
 
   supabase.auth.onAuthStateChange((_event, session) => {
     setAuthSessionLabel(session?.user || null);
+    if (session?.user) {
+      closeAuthPanel();
+    } else {
+      openAuthPanel();
+    }
   });
 }
 
@@ -1166,6 +1187,7 @@ async function handleSignOut() {
 
   setAuthStatus("Signed out.", false);
   setAuthSessionLabel(null);
+  openAuthPanel();
 }
 
 function setAuthStatus(message, isError = false) {
@@ -1180,8 +1202,22 @@ function setAuthSessionLabel(user) {
 
   if (!user) {
     authSessionState.textContent = "Not signed in";
+    authSessionState.title = "Open account access";
     return;
   }
 
   authSessionState.textContent = user.email ? `Signed in as ${user.email}` : "Signed in";
+  authSessionState.title = user.email || "Signed in";
+}
+
+function openAuthPanel() {
+  authPanel?.classList.remove("is-collapsed");
+}
+
+function closeAuthPanel() {
+  authPanel?.classList.add("is-collapsed");
+}
+
+function toggleAuthPanel() {
+  authPanel?.classList.toggle("is-collapsed");
 }

@@ -19,10 +19,13 @@
     <header>
         <div class="header-bar">
             <h1>GastoBot</h1>
-            <button id="theme-toggle" class="theme-toggle" type="button" aria-pressed="false" aria-label="Toggle dark mode">
-                <span class="theme-toggle__icon" aria-hidden="true">🌙</span>
-                <span class="theme-toggle__label">Dark</span>
-            </button>
+            <div class="header-actions">
+                <button id="auth-session-state" class="auth-session-pill" type="button">Not signed in</button>
+                <button id="theme-toggle" class="theme-toggle" type="button" aria-pressed="false" aria-label="Toggle dark mode">
+                    <span class="theme-toggle__icon" aria-hidden="true">🌙</span>
+                    <span class="theme-toggle__label">Dark</span>
+                </button>
+            </div>
         </div>
     </header>
 
@@ -48,13 +51,12 @@
         </nav>
 
         <section id="dashboard-view">
-            <section class="container auth-panel" aria-labelledby="auth-title">
+            <section class="container auth-panel is-collapsed" aria-labelledby="auth-title">
                 <div class="auth-panel__header">
                     <div>
                         <h1 id="auth-title">Account access</h1>
                         <p class="auth-panel__note">Use email and password to keep your expenses private.</p>
                     </div>
-                    <div class="auth-panel__session" id="auth-session-state">Not signed in</div>
                 </div>
 
                 <div class="auth-panel__grid">
