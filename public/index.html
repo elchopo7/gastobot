@@ -12,8 +12,8 @@
 
 <body>
     <script>
-        window.GASTOBOT_SUPABASE_URL = "SUPABASE_URL_HERE";
-        window.GASTOBOT_SUPABASE_ANON_KEY = "SUPABASE_ANON_KEY_HERE";
+        window.GASTOBOT_SUPABASE_URL = "https://zyuegghucxsomrnxkkhf.supabase.co";
+        window.GASTOBOT_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp5dWVnZ2h1Y3hzb21ybnhra2hmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0NzE2OTUsImV4cCI6MjA5MzA0NzY5NX0.1TAF03Igd5N1ZYq_-_jpQupeQQIoZ-_EeleIvU1dcMg";
     </script>
     
     <header>
@@ -48,6 +48,36 @@
         </nav>
 
         <section id="dashboard-view">
+            <section class="container auth-panel" aria-labelledby="auth-title">
+                <div class="auth-panel__header">
+                    <div>
+                        <h1 id="auth-title">Account access</h1>
+                        <p class="auth-panel__note">Use email and password to keep your expenses private.</p>
+                    </div>
+                    <div class="auth-panel__session" id="auth-session-state">Not signed in</div>
+                </div>
+
+                <div class="auth-panel__grid">
+                    <div class="auth-field">
+                        <label for="auth-email">Email</label>
+                        <input id="auth-email" type="email" placeholder="you@example.com" autocomplete="email" />
+                    </div>
+
+                    <div class="auth-field">
+                        <label for="auth-password">Password</label>
+                        <input id="auth-password" type="password" placeholder="••••••••" autocomplete="current-password" />
+                    </div>
+                </div>
+
+                <div class="auth-panel__actions">
+                    <button id="auth-signup" type="button">Create account</button>
+                    <button id="auth-signin" type="button">Sign in</button>
+                    <button id="auth-signout" type="button" class="auth-panel__secondary">Sign out</button>
+                </div>
+
+                <p id="auth-status" class="form-status" aria-live="polite"></p>
+            </section>
+
             <section class="kpi-grid" aria-label="Key expense metrics">
             <article class="kpi-card">
                 <p class="kpi-card__label">Monthly total</p>
@@ -91,36 +121,6 @@
         </section>
 
         <section id="expenses-view" class="is-hidden">
-            <section class="container auth-panel" aria-labelledby="auth-title">
-                <div class="auth-panel__header">
-                    <div>
-                        <h1 id="auth-title">Account access</h1>
-                        <p class="auth-panel__note">Use email and password to keep your expenses private.</p>
-                    </div>
-                    <div class="auth-panel__session" id="auth-session-state">Not signed in</div>
-                </div>
-
-                <div class="auth-panel__grid">
-                    <div class="auth-field">
-                        <label for="auth-email">Email</label>
-                        <input id="auth-email" type="email" placeholder="you@example.com" autocomplete="email" />
-                    </div>
-
-                    <div class="auth-field">
-                        <label for="auth-password">Password</label>
-                        <input id="auth-password" type="password" placeholder="••••••••" autocomplete="current-password" />
-                    </div>
-                </div>
-
-                <div class="auth-panel__actions">
-                    <button id="auth-signup" type="button">Create account</button>
-                    <button id="auth-signin" type="button">Sign in</button>
-                    <button id="auth-signout" type="button" class="auth-panel__secondary">Sign out</button>
-                </div>
-
-                <p id="auth-status" class="form-status" aria-live="polite"></p>
-            </section>
-
             <div class="container">
                 <h1>New Expense</h1>
 

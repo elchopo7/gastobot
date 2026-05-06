@@ -113,6 +113,8 @@ const supabase =
   SUPABASE_URL && SUPABASE_ANON_KEY && !SUPABASE_URL.includes("SUPABASE_URL_HERE")
     ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
     : null;
+const supabaseConfigured =
+  Boolean(SUPABASE_URL && SUPABASE_ANON_KEY) && !SUPABASE_URL.includes("SUPABASE_URL_HERE");
 
 (async function init() {
   try {
@@ -1036,7 +1038,12 @@ function syncThemeToggle() {
 
 async function syncAuthState() {
   if (!supabase) {
-    setAuthStatus("Supabase client not configured.", true);
+    setAuthStatus(
+      supabaseConfigured
+        ? "Supabase client not configured."
+        : "Replace the Supabase placeholders in index.html with your project URL and anon key.",
+      true
+    );
     setAuthSessionLabel(null);
     return;
   }
@@ -1064,7 +1071,12 @@ async function syncAuthState() {
 
 async function handleSignUp() {
   if (!supabase) {
-    setAuthStatus("Supabase client not configured.", true);
+    setAuthStatus(
+      supabaseConfigured
+        ? "Supabase client not configured."
+        : "Replace the Supabase placeholders in index.html with your project URL and anon key.",
+      true
+    );
     return;
   }
 
@@ -1099,7 +1111,12 @@ async function handleSignUp() {
 
 async function handleSignIn() {
   if (!supabase) {
-    setAuthStatus("Supabase client not configured.", true);
+    setAuthStatus(
+      supabaseConfigured
+        ? "Supabase client not configured."
+        : "Replace the Supabase placeholders in index.html with your project URL and anon key.",
+      true
+    );
     return;
   }
 
@@ -1129,7 +1146,12 @@ async function handleSignIn() {
 
 async function handleSignOut() {
   if (!supabase) {
-    setAuthStatus("Supabase client not configured.", true);
+    setAuthStatus(
+      supabaseConfigured
+        ? "Supabase client not configured."
+        : "Replace the Supabase placeholders in index.html with your project URL and anon key.",
+      true
+    );
     return;
   }
 
