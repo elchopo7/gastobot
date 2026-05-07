@@ -16,6 +16,7 @@ const allowedCategories = new Set([
 
 function validateExpensePayload(payload) {
   const numericAmount = Number(payload.amount);
+  const hasValidUserId = typeof payload.user_id === "string" && payload.user_id.trim() !== "";
 
   if (
     !Number.isFinite(numericAmount) ||
@@ -29,12 +30,18 @@ function validateExpensePayload(payload) {
     return null;
   }
 
-  return {
+  const validated = {
     amount: numericAmount,
     category: payload.category,
     description: payload.description.trim(),
     date: payload.date,
   };
+
+  if (hasValidUserId) {
+    validated.user_id = payload.user_id.trim();
+  }
+
+  return validated;
 }
 
 module.exports = async function handler(req, res) {
@@ -47,8 +54,11 @@ module.exports = async function handler(req, res) {
     if (req.method === "POST") {
       const expense = validateExpensePayload(req.body || {});
 
-      if (!expense) {
-        return res.status(400).json({ message: "Invalid expense data" });
+      if (!expense || !expense.user_id) {
+        return res.status(400).json({
+          message: "Invalid expense data",
+          error: "Missing authenticated user_id",
+        });
       }
 
       const createdExpense = await addExpense(expense);
