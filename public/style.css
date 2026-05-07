@@ -650,6 +650,107 @@ button:active {
   color: #b91c1c;
 }
 
+.ticket-scanner {
+  display: grid;
+  gap: 14px;
+}
+
+.ticket-scanner__dropzone {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border: 1px dashed var(--border);
+  border-radius: 16px;
+  background: var(--surface-soft);
+}
+
+.ticket-scanner__dropzone input[type="file"] {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface-elevated);
+}
+
+.ticket-scanner__hint {
+  margin: 0;
+  color: var(--text-muted);
+  line-height: 1.5;
+  font-size: 0.94rem;
+}
+
+.ticket-scanner__preview-wrap {
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: var(--surface-elevated);
+}
+
+.ticket-scanner__preview {
+  display: block;
+  width: 100%;
+  max-height: 220px;
+  object-fit: cover;
+}
+
+.ticket-scanner__actions {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+.ticket-scanner__secondary,
+.ticket-scanner__primary {
+  margin: 0;
+}
+
+.ticket-scanner__secondary {
+  background: transparent;
+  color: var(--primary);
+  border: 1px solid var(--border);
+}
+
+.ticket-scanner__primary {
+  width: 100%;
+}
+
+.ticket-scanner__status {
+  margin: 0;
+  color: var(--text-muted);
+  line-height: 1.5;
+  font-size: 0.94rem;
+}
+
+.ticket-scanner__status--error {
+  color: #dc2626;
+}
+
+.ticket-scanner__result {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface-soft);
+}
+
+.ticket-scanner__result-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 0.94rem;
+}
+
+.ticket-scanner__result-row span {
+  color: var(--text-muted);
+}
+
+.ticket-scanner__result-row strong {
+  color: var(--text);
+  text-align: right;
+}
+
 .report-header {
   display: flex;
   flex-direction: column;
@@ -828,6 +929,14 @@ ul li div.card {
 
   .auth-panel__actions {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .ticket-scanner__actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .ticket-scanner__preview {
+    max-height: 300px;
   }
 
   ul {

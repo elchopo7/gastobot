@@ -71,6 +71,16 @@ const aiResult = document.getElementById("ai-result");
 const expenseFormStatus = document.getElementById("expense-form-status");
 const expensesListTitle = document.getElementById("expenses-list-title");
 const expensesListMeta = document.getElementById("expenses-list-meta");
+const ticketImageInput = document.getElementById("ticket-image");
+const ticketPreviewWrap = document.getElementById("ticket-preview-wrap");
+const ticketPreview = document.getElementById("ticket-preview");
+const ticketScanButton = document.getElementById("ticket-scan");
+const ticketClearButton = document.getElementById("ticket-clear");
+const ticketStatus = document.getElementById("ticket-status");
+const ticketApplyButton = document.getElementById("ticket-apply");
+const ticketAmountResult = document.getElementById("ticket-amount-result");
+const ticketMerchantResult = document.getElementById("ticket-merchant-result");
+const ticketDateResult = document.getElementById("ticket-date-result");
 
 const categoryIcons = {
   food: "🍔",
@@ -111,6 +121,16 @@ let budgetState = {
   month: selectedMonth,
   limitAmount: null,
   error: null,
+};
+let ticketState = {
+  file: null,
+  previewUrl: "",
+  text: "",
+  amount: null,
+  merchant: "",
+  date: "",
+  isProcessing: false,
+  error: "",
 };
 let filters = {
   search: "",
@@ -254,6 +274,22 @@ if (budgetForm) {
       }
     }
   });
+}
+
+if (ticketImageInput) {
+  ticketImageInput.addEventListener("change", handleTicketFileSelection);
+}
+
+if (ticketScanButton) {
+  ticketScanButton.addEventListener("click", scanSelectedTicket);
+}
+
+if (ticketClearButton) {
+  ticketClearButton.addEventListener("click", clearTicketScanner);
+}
+
+if (ticketApplyButton) {
+  ticketApplyButton.addEventListener("click", applyTicketExtractionToForm);
 }
 
 dashboardTab.addEventListener("click", () => {
@@ -612,6 +648,339 @@ async function renderBudget() {
   }
 
   budgetStatus.textContent = `You have used ${usage.toFixed(0)}% of your budget.`;
+}
+
+function handleTicketFileSelection(event) {
+  const [file] = event.target.files || [];
+
+  resetTicketResult(false);
+
+  if (!file) {
+    setTicketStatus("No image selected yet.");
+    return;
+  }
+
+  if (!file.type.startsWith("image/")) {
+    setTicketError("Please upload a JPG, PNG or HEIC-compatible image.");
+    return;
+  }
+
+  ticketState.file = file;
+
+  if (ticketState.previewUrl) {
+    URL.revokeObjectURL(ticketState.previewUrl);
+  }
+
+  ticketState.previewUrl = URL.createObjectURL(file);
+
+  if (ticketPreviewWrap) {
+    ticketPreviewWrap.classList.remove("is-hidden");
+  }
+
+  if (ticketPreview) {
+    ticketPreview.src = ticketState.previewUrl;
+  }
+
+  setTicketStatus("Image selected. Tap Extract amount to run OCR locally.");
+}
+
+async function scanSelectedTicket() {
+  if (!ticketState.file) {
+    setTicketError("Choose an image first.");
+    return;
+  }
+
+  const ocr = window.Tesseract;
+
+  if (!ocr || typeof ocr.recognize !== "function") {
+    setTicketError("OCR engine is not available right now.");
+    return;
+  }
+
+  if (ticketState.isProcessing) {
+    return;
+  }
+
+  ticketState.isProcessing = true;
+  ticketState.error = "";
+  ticketState.text = "";
+    ticketState.amount = null;
+    ticketState.merchant = "";
+    ticketState.date = "";
+    updateTicketResult();
+    setTicketStatus("Reading ticket... this happens locally in your browser.");
+  setTicketActionLoading(true);
+
+  try {
+    const result = await ocr.recognize(ticketState.file, "eng+spa", {
+      logger: ({ status, progress }) => {
+        if (status) {
+          const percent = Number.isFinite(progress) ? Math.round(progress * 100) : null;
+          setTicketStatus(
+            percent !== null
+              ? `${status} (${percent}%)`
+              : status.charAt(0).toUpperCase() + status.slice(1)
+          );
+        }
+      },
+    });
+
+    ticketState.text = result?.data?.text || "";
+
+    if (!ticketState.text.trim()) {
+      setTicketError("We could not read any text from this image. Try a clearer photo.");
+      return;
+    }
+
+    const parsed = parseTicketText(ticketState.text);
+    ticketState.amount = parsed.amount;
+    ticketState.merchant = parsed.merchant;
+    ticketState.date = parsed.date;
+
+    if (!ticketState.amount) {
+      setTicketError("No clear amount was detected. Try another photo or enter it manually.");
+      return;
+    }
+
+    updateTicketResult();
+    setTicketStatus("Ticket read successfully. Review the detected data before saving.");
+    if (ticketApplyButton) {
+      ticketApplyButton.classList.remove("is-hidden");
+    }
+  } catch (error) {
+    setTicketError(error.message || "OCR failed.");
+  } finally {
+    ticketState.isProcessing = false;
+    setTicketActionLoading(false);
+  }
+}
+
+function parseTicketText(text) {
+  const normalized = String(text || "").replace(/\s+/g, " ").trim();
+  const lines = String(text || "")
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  const amountCandidates = extractAmountCandidates(normalized);
+  const amount = selectBestAmount(amountCandidates, normalized);
+  const merchant = inferMerchant(lines);
+  const date = inferDate(normalized) || "";
+
+  return {
+    amount,
+    merchant,
+    date,
+  };
+}
+
+function extractAmountCandidates(text) {
+  const matches = [...text.matchAll(/(?:€|EUR|usd|\$)?\s*(\d{1,4}(?:[.,]\d{2})?)/gi)];
+  return matches
+    .map((match) => Number(String(match[1]).replace(",", ".")))
+    .filter((value) => Number.isFinite(value) && value > 0);
+}
+
+function selectBestAmount(candidates, text) {
+  if (!candidates.length) {
+    return null;
+  }
+
+  const keywords = ["total", "importe", "amount", "grand total", "total a pagar", "total due", "balance due"];
+  const lowerText = text.toLowerCase();
+  const keywordBonus = keywords.some((keyword) => lowerText.includes(keyword)) ? 1 : 0;
+
+  const unique = [...new Set(candidates.map((value) => Number(value.toFixed(2))))];
+  const sorted = unique.sort((a, b) => a - b);
+
+  if (sorted.length === 1) {
+    return sorted[0];
+  }
+
+  if (keywordBonus) {
+    return sorted[sorted.length - 1];
+  }
+
+  const lastLineCandidates = extractAmountCandidates(text.split("\n").slice(-4).join(" "));
+  if (lastLineCandidates.length) {
+    return Math.max(...lastLineCandidates);
+  }
+
+  return sorted[sorted.length - 1];
+}
+
+function inferMerchant(lines) {
+  if (!lines.length) {
+    return "";
+  }
+
+  const stopWords = new Set([
+    "total",
+    "importe",
+    "change",
+    "iva",
+    "tax",
+    "cash",
+    "card",
+    "credit",
+    "debit",
+    "ticket",
+    "receipt",
+  ]);
+
+  const candidate = lines.find((line) => {
+    const lower = line.toLowerCase();
+    return lower.length > 2 && !stopWords.has(lower);
+  });
+
+  return candidate || lines[0] || "";
+}
+
+function inferDate(text) {
+  const datePatterns = [
+    /\b(\d{4})[-/](\d{2})[-/](\d{2})\b/,
+    /\b(\d{2})[-/](\d{2})[-/](\d{4})\b/,
+    /\b(\d{2})[-/](\d{2})[-/](\d{2})\b/,
+  ];
+
+  for (const pattern of datePatterns) {
+    const match = text.match(pattern);
+    if (!match) continue;
+
+    if (pattern === datePatterns[0]) {
+      return `${match[1]}-${match[2]}-${match[3]}`;
+    }
+
+    if (pattern === datePatterns[1]) {
+      return `${match[3]}-${match[2]}-${match[1]}`;
+    }
+
+    if (pattern === datePatterns[2]) {
+      const year = Number(match[3]) + 2000;
+      return `${year}-${match[2]}-${match[1]}`;
+    }
+  }
+
+  return "";
+}
+
+function applyTicketExtractionToForm() {
+  if (!ticketState.amount) {
+    setTicketError("Scan a ticket first and detect a valid amount.");
+    return;
+  }
+
+  if (document.getElementById("amount")) {
+    document.getElementById("amount").value = ticketState.amount.toFixed(2);
+  }
+
+  if (document.getElementById("description")) {
+    document.getElementById("description").value = ticketState.merchant || "Receipt expense";
+  }
+
+  if (document.getElementById("date") && ticketState.date) {
+    document.getElementById("date").value = ticketState.date;
+  }
+
+  if (expenseFormStatus) {
+    expenseFormStatus.textContent = "Ticket data applied. Review before saving.";
+    expenseFormStatus.classList.remove("form-status--error");
+  }
+
+  setTicketStatus("Ticket data copied into the expense form.");
+}
+
+function clearTicketScanner() {
+  if (ticketState.previewUrl) {
+    URL.revokeObjectURL(ticketState.previewUrl);
+  }
+
+  ticketState = {
+    file: null,
+    previewUrl: "",
+    text: "",
+    amount: null,
+    merchant: "",
+    date: "",
+    isProcessing: false,
+    error: "",
+  };
+
+  if (ticketImageInput) {
+    ticketImageInput.value = "";
+  }
+
+  if (ticketPreview) {
+    ticketPreview.removeAttribute("src");
+  }
+
+  if (ticketPreviewWrap) {
+    ticketPreviewWrap.classList.add("is-hidden");
+  }
+
+  resetTicketResult(true);
+  setTicketStatus("No image selected yet.");
+}
+
+function resetTicketResult(clearPreview = false) {
+  ticketState.text = "";
+  ticketState.amount = null;
+  ticketState.merchant = "";
+  ticketState.date = "";
+  ticketState.error = "";
+
+  if (clearPreview) {
+    ticketState.previewUrl = "";
+  }
+
+  updateTicketResult();
+
+  if (ticketApplyButton) {
+    ticketApplyButton.classList.add("is-hidden");
+  }
+}
+
+function updateTicketResult() {
+  if (ticketAmountResult) {
+    ticketAmountResult.textContent = ticketState.amount ? `€${ticketState.amount.toFixed(2)}` : "-";
+  }
+
+  if (ticketMerchantResult) {
+    ticketMerchantResult.textContent = ticketState.merchant || "-";
+  }
+
+  if (ticketDateResult) {
+    ticketDateResult.textContent = ticketState.date || "-";
+  }
+}
+
+function setTicketStatus(message) {
+  if (ticketStatus) {
+    ticketStatus.textContent = message;
+    ticketStatus.classList.remove("ticket-scanner__status--error");
+  }
+}
+
+function setTicketError(message) {
+  ticketState.error = message;
+  ticketState.amount = null;
+  ticketState.merchant = "";
+  ticketState.date = "";
+  updateTicketResult();
+  if (ticketStatus) {
+    ticketStatus.textContent = message;
+    ticketStatus.classList.add("ticket-scanner__status--error");
+  }
+  if (ticketApplyButton) {
+    ticketApplyButton.classList.add("is-hidden");
+  }
+}
+
+function setTicketActionLoading(isLoading) {
+  if (ticketScanButton) {
+    ticketScanButton.disabled = isLoading;
+    ticketScanButton.textContent = isLoading ? "Scanning..." : "Extract amount";
+  }
 }
 
 async function fetchMonthlySummary(month) {

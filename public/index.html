@@ -8,6 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 </head>
 
 <body>
@@ -165,6 +166,60 @@
         </section>
 
         <section id="expenses-view" class="is-hidden">
+            <section class="container ticket-scanner" aria-labelledby="ticket-scanner-title">
+                <div class="section-heading">
+                    <div>
+                        <p class="comparison-panel__eyebrow">Receipt scan</p>
+                        <h1 id="ticket-scanner-title">Scan a ticket</h1>
+                    </div>
+                    <p class="comparison-panel__note">Upload a photo and extract the amount locally in your browser.</p>
+                </div>
+
+                <div class="ticket-scanner__dropzone" id="ticket-dropzone">
+                    <input
+                        type="file"
+                        id="ticket-image"
+                        accept="image/*"
+                        capture="environment"
+                    />
+                    <p class="ticket-scanner__hint">
+                        Take a photo or upload a receipt. Images stay in your device while OCR runs.
+                    </p>
+                </div>
+
+                <div class="ticket-scanner__preview-wrap is-hidden" id="ticket-preview-wrap">
+                    <img id="ticket-preview" alt="Receipt preview" class="ticket-scanner__preview" />
+                </div>
+
+                <div class="ticket-scanner__actions">
+                    <button id="ticket-scan" type="button">Extract amount</button>
+                    <button id="ticket-clear" type="button" class="ticket-scanner__secondary">Clear</button>
+                </div>
+
+                <div class="ticket-scanner__status" id="ticket-status" aria-live="polite">
+                    No image selected yet.
+                </div>
+
+                <div class="ticket-scanner__result" id="ticket-result">
+                    <div class="ticket-scanner__result-row">
+                        <span>Detected amount</span>
+                        <strong id="ticket-amount-result">-</strong>
+                    </div>
+                    <div class="ticket-scanner__result-row">
+                        <span>Detected merchant</span>
+                        <strong id="ticket-merchant-result">-</strong>
+                    </div>
+                    <div class="ticket-scanner__result-row">
+                        <span>Detected date</span>
+                        <strong id="ticket-date-result">-</strong>
+                    </div>
+                </div>
+
+                <button id="ticket-apply" type="button" class="ticket-scanner__primary is-hidden">
+                    Use this data
+                </button>
+            </section>
+
             <div class="container">
                 <h1>New Expense</h1>
 
