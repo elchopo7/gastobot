@@ -192,7 +192,8 @@
                 </div>
 
                 <div class="ticket-scanner__actions">
-                    <button id="ticket-scan" type="button">Extract amount</button>
+                    <button id="ticket-scan" type="button">Analyze receipt</button>
+                    <button id="ticket-local-ocr" type="button" class="ticket-scanner__secondary">Try local OCR</button>
                     <button id="ticket-clear" type="button" class="ticket-scanner__secondary">Clear</button>
                 </div>
 
@@ -212,6 +213,10 @@
                     <div class="ticket-scanner__result-row">
                         <span>Detected date</span>
                         <strong id="ticket-date-result">-</strong>
+                    </div>
+                    <div class="ticket-scanner__result-row">
+                        <span>Confidence</span>
+                        <strong id="ticket-confidence-result">-</strong>
                     </div>
                 </div>
 

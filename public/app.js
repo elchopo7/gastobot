@@ -75,12 +75,14 @@ const ticketImageInput = document.getElementById("ticket-image");
 const ticketPreviewWrap = document.getElementById("ticket-preview-wrap");
 const ticketPreview = document.getElementById("ticket-preview");
 const ticketScanButton = document.getElementById("ticket-scan");
+const ticketLocalOcrButton = document.getElementById("ticket-local-ocr");
 const ticketClearButton = document.getElementById("ticket-clear");
 const ticketStatus = document.getElementById("ticket-status");
 const ticketApplyButton = document.getElementById("ticket-apply");
 const ticketAmountResult = document.getElementById("ticket-amount-result");
 const ticketMerchantResult = document.getElementById("ticket-merchant-result");
 const ticketDateResult = document.getElementById("ticket-date-result");
+const ticketConfidenceResult = document.getElementById("ticket-confidence-result");
 
 const categoryIcons = {
   food: "🍔",
@@ -281,7 +283,11 @@ if (ticketImageInput) {
 }
 
 if (ticketScanButton) {
-  ticketScanButton.addEventListener("click", scanSelectedTicket);
+  ticketScanButton.addEventListener("click", analyzeSelectedTicket);
+}
+
+if (ticketLocalOcrButton) {
+  ticketLocalOcrButton.addEventListener("click", scanSelectedTicketWithLocalOcr);
 }
 
 if (ticketClearButton) {
@@ -684,16 +690,9 @@ function handleTicketFileSelection(event) {
   setTicketStatus("Image selected. Tap Extract amount to run OCR locally.");
 }
 
-async function scanSelectedTicket() {
+async function analyzeSelectedTicket() {
   if (!ticketState.file) {
     setTicketError("Choose an image first.");
-    return;
-  }
-
-  const ocr = window.Tesseract;
-
-  if (!ocr || typeof ocr.recognize !== "function") {
-    setTicketError("OCR engine is not available right now.");
     return;
   }
 
@@ -704,11 +703,86 @@ async function scanSelectedTicket() {
   ticketState.isProcessing = true;
   ticketState.error = "";
   ticketState.text = "";
-    ticketState.amount = null;
-    ticketState.merchant = "";
-    ticketState.date = "";
+  ticketState.amount = null;
+  ticketState.merchant = "";
+  ticketState.date = "";
+  ticketState.confidence = null;
+  updateTicketResult();
+  setTicketStatus("Sending receipt to the vision model...");
+  setTicketActionLoading(true);
+
+  try {
+    const imageDataUrl = await readFileAsDataUrl(ticketState.file);
+    const response = await fetch("/api/receipts/analyze", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        imageDataUrl,
+        hintMonth: selectedMonth,
+      }),
+    });
+
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      throw new Error(data.error || data.message || "Receipt analysis failed.");
+    }
+
+    ticketState.amount = Number.isFinite(Number(data.amount)) ? Number(data.amount) : null;
+    ticketState.merchant = typeof data.merchant === "string" ? data.merchant : "";
+    ticketState.date = normalizeDateString(data.date);
+    ticketState.confidence = Number.isFinite(Number(data.confidence)) ? Number(data.confidence) : null;
+    ticketState.text = "";
+
+    if (!ticketState.amount) {
+      throw new Error("The model could not detect a clear total.");
+    }
+
     updateTicketResult();
-    setTicketStatus("Reading ticket... this happens locally in your browser.");
+    setTicketStatus(
+      data.source === "vision"
+        ? "Receipt analyzed successfully. Review the detected data before saving."
+        : "Receipt analyzed. Please review the detected data before saving."
+    );
+    if (ticketApplyButton) {
+      ticketApplyButton.classList.remove("is-hidden");
+    }
+  } catch (error) {
+    setTicketError(error.message || "Receipt analysis failed.");
+  } finally {
+    ticketState.isProcessing = false;
+    setTicketActionLoading(false);
+  }
+}
+
+async function scanSelectedTicketWithLocalOcr() {
+  if (!ticketState.file) {
+    setTicketError("Choose an image first.");
+    return;
+  }
+
+  const ocr = window.Tesseract;
+
+  if (!ocr || typeof ocr.recognize !== "function") {
+    setTicketError("Local OCR engine is not available right now.");
+    return;
+  }
+
+  if (ticketState.isProcessing) {
+    return;
+  }
+
+  ticketState.isProcessing = true;
+  ticketState.error = "";
+  ticketState.text = "";
+  ticketState.amount = null;
+  ticketState.merchant = "";
+  ticketState.date = "";
+  ticketState.confidence = null;
+  updateTicketResult();
+  setTicketStatus("Reading ticket locally in your browser...");
   setTicketActionLoading(true);
 
   try {
@@ -736,6 +810,7 @@ async function scanSelectedTicket() {
     ticketState.amount = parsed.amount;
     ticketState.merchant = parsed.merchant;
     ticketState.date = parsed.date;
+    ticketState.confidence = null;
 
     if (!ticketState.amount) {
       setTicketError("No clear amount was detected. Try another photo or enter it manually.");
@@ -743,7 +818,7 @@ async function scanSelectedTicket() {
     }
 
     updateTicketResult();
-    setTicketStatus("Ticket read successfully. Review the detected data before saving.");
+    setTicketStatus("Local OCR completed. Review the detected data before saving.");
     if (ticketApplyButton) {
       ticketApplyButton.classList.remove("is-hidden");
     }
@@ -904,6 +979,7 @@ function clearTicketScanner() {
     date: "",
     isProcessing: false,
     error: "",
+    confidence: null,
   };
 
   if (ticketImageInput) {
@@ -928,6 +1004,7 @@ function resetTicketResult(clearPreview = false) {
   ticketState.merchant = "";
   ticketState.date = "";
   ticketState.error = "";
+  ticketState.confidence = null;
 
   if (clearPreview) {
     ticketState.previewUrl = "";
@@ -952,6 +1029,12 @@ function updateTicketResult() {
   if (ticketDateResult) {
     ticketDateResult.textContent = ticketState.date || "-";
   }
+
+  if (ticketConfidenceResult) {
+    ticketConfidenceResult.textContent = Number.isFinite(ticketState.confidence)
+      ? `${Math.round(ticketState.confidence * 100)}%`
+      : "-";
+  }
 }
 
 function setTicketStatus(message) {
@@ -966,6 +1049,7 @@ function setTicketError(message) {
   ticketState.amount = null;
   ticketState.merchant = "";
   ticketState.date = "";
+  ticketState.confidence = null;
   updateTicketResult();
   if (ticketStatus) {
     ticketStatus.textContent = message;
@@ -981,6 +1065,24 @@ function setTicketActionLoading(isLoading) {
     ticketScanButton.disabled = isLoading;
     ticketScanButton.textContent = isLoading ? "Scanning..." : "Extract amount";
   }
+}
+
+function normalizeDateString(value) {
+  if (typeof value !== "string") {
+    return "";
+  }
+
+  const trimmed = value.trim();
+  return /^\d{4}-\d{2}-\d{2}$/.test(trimmed) ? trimmed : "";
+}
+
+function readFileAsDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ""));
+    reader.onerror = () => reject(new Error("Could not read the selected image."));
+    reader.readAsDataURL(file);
+  });
 }
 
 async function fetchMonthlySummary(month) {

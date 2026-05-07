@@ -3,6 +3,7 @@ const express = require("express");
 const path = require("path");
 const expensesRouter = require("./routes/expenses");
 const aiRouter = require("./routes/ai");
+const receiptsRouter = require("./routes/receipts");
 const { seedDatabase } = require("./db/seed");
 const { createTelegramBot } = require("./telegram/bot");
 const { addExpense, findAllExpenses, getSummaryByMonth } = require("./db/expenses");
@@ -23,7 +24,7 @@ seedDatabase().catch((error) => {
   console.error("Failed to seed expenses:", error.message || error);
 });
 
-app.use(express.json());
+app.use(express.json({ limit: "12mb" }));
 app.use(express.static(path.join(__dirname, "../public")));
 app.use(
   "/vendor",
@@ -31,6 +32,7 @@ app.use(
 );
 app.use("/api/expenses", expensesRouter);
 app.use("/api/ai", aiRouter);
+app.use("/api/receipts", receiptsRouter);
 
 app.post("/api/telegram-webhook", (req, res) => {
   if (!telegramBot) {
