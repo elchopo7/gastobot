@@ -318,7 +318,9 @@ monthNextButton.addEventListener("click", async () => {
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
 
-  if (!currentUser) {
+  const activeUser = await getActiveUser();
+
+  if (!activeUser) {
     if (expenseFormStatus) {
       expenseFormStatus.textContent = "Sign in to save an expense.";
       expenseFormStatus.classList.add("form-status--error");
@@ -333,7 +335,7 @@ form.addEventListener("submit", async (event) => {
     category: formData.get("category"),
     description: formData.get("description") || "No description",
     date: formData.get("date"),
-    user_id: currentUser.id,
+    user_id: activeUser.id,
   };
 
   const response = await fetch("/api/expenses", {
@@ -480,7 +482,9 @@ async function loadBudgetForSelectedMonth() {
 
   budgetState.month = selectedMonth;
 
-  if (!supabase || !currentUser) {
+  const activeUser = await getActiveUser();
+
+  if (!supabase || !activeUser) {
     budgetState.limitAmount = null;
     budgetState.error = null;
     await renderBudget();
@@ -490,7 +494,7 @@ async function loadBudgetForSelectedMonth() {
   const { data, error } = await supabase
     .from("budgets")
     .select("limit_amount")
-    .eq("user_id", currentUser.id)
+    .eq("user_id", activeUser.id)
     .eq("month", selectedMonth)
     .maybeSingle();
 
@@ -510,12 +514,14 @@ async function loadBudgetForSelectedMonth() {
 }
 
 async function saveBudgetForMonth(month, limitAmount) {
-  if (!supabase || !currentUser) {
+  const activeUser = await getActiveUser();
+
+  if (!supabase || !activeUser) {
     throw new Error("Sign in to save your budget.");
   }
 
   const payload = {
-    user_id: currentUser.id,
+    user_id: activeUser.id,
     month,
     limit_amount: limitAmount,
     updated_at: new Date().toISOString(),
@@ -1251,6 +1257,25 @@ function getStoredTheme() {
   } catch {
     return null;
   }
+}
+
+async function getActiveUser() {
+  if (currentUser) {
+    return currentUser;
+  }
+
+  if (!supabase) {
+    return null;
+  }
+
+  const { data, error } = await supabase.auth.getUser();
+
+  if (error) {
+    return null;
+  }
+
+  currentUser = data?.user || null;
+  return currentUser;
 }
 
 function syncThemeToggle() {

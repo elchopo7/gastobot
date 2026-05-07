@@ -198,7 +198,10 @@ router.post("/", async (req, res) => {
   const expense = validateExpensePayload(req.body);
 
   if (!expense || !expense.user_id) {
-    return res.status(400).json({ message: "Invalid expense data" });
+    return res.status(400).json({
+      message: "Invalid expense data",
+      error: "Missing authenticated user_id",
+    });
   }
 
   try {
