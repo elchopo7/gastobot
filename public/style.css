@@ -573,6 +573,83 @@ button:active {
   color: var(--text-muted);
 }
 
+.budget-panel {
+  display: grid;
+  gap: 16px;
+}
+
+.budget-panel__form {
+  display: grid;
+  gap: 12px;
+  margin-top: 0;
+}
+
+.budget-panel__actions {
+  display: flex;
+}
+
+.budget-panel__actions button {
+  width: 100%;
+}
+
+.budget-meter {
+  display: grid;
+  gap: 10px;
+}
+
+.budget-meter__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--text-muted);
+  font-size: 0.94rem;
+  font-weight: 600;
+}
+
+.budget-meter__track {
+  width: 100%;
+  height: 12px;
+  border-radius: 999px;
+  background: var(--surface-soft);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.budget-meter__bar {
+  width: 0%;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--primary), #14b8a6);
+  transition: width 180ms ease, background 180ms ease;
+}
+
+.budget-meter__status {
+  margin: 0;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.budget-meter__status--error {
+  color: #dc2626;
+}
+
+.budget-panel--warning .budget-meter__bar {
+  background: linear-gradient(90deg, #f59e0b, #f97316);
+}
+
+.budget-panel--danger .budget-meter__bar {
+  background: linear-gradient(90deg, #ef4444, #f97316);
+}
+
+.budget-panel--warning .budget-meter__status {
+  color: #b45309;
+}
+
+.budget-panel--danger .budget-meter__status {
+  color: #b91c1c;
+}
+
 .report-header {
   display: flex;
   flex-direction: column;
@@ -767,5 +844,12 @@ ul li div.card {
 
   .theme-toggle {
     padding: 10px 14px;
+  }
+}
+
+@media (max-width: 520px) {
+  .budget-meter__row {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }

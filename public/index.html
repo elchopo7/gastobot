@@ -106,6 +106,48 @@
                 <p class="summary-card__note">Based on your recorded expenses</p>
             </section>
 
+            <section class="container budget-panel" aria-labelledby="budget-title">
+                <div class="section-heading">
+                    <div>
+                        <p class="section-kicker">Budget</p>
+                        <h1 id="budget-title">Monthly budget</h1>
+                    </div>
+                    <p class="section-note" id="budget-month-label">For the active month</p>
+                </div>
+
+                <form id="budget-form" class="budget-panel__form">
+                    <div>
+                        <label for="budget-limit">Monthly limit</label>
+                        <input
+                            id="budget-limit"
+                            name="budget-limit"
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            placeholder="e.g. 1200"
+                            inputmode="decimal"
+                        />
+                    </div>
+
+                    <div class="budget-panel__actions">
+                        <button type="submit">Save budget</button>
+                    </div>
+                </form>
+
+                <div class="budget-meter" aria-live="polite">
+                    <div class="budget-meter__row">
+                        <span id="budget-spent-label">Spent €0.00</span>
+                        <span id="budget-limit-label">Limit not set</span>
+                    </div>
+                    <div class="budget-meter__track" aria-hidden="true">
+                        <div class="budget-meter__bar" id="budget-progress-bar"></div>
+                    </div>
+                    <p class="budget-meter__status" id="budget-status">
+                        Sign in to save a monthly budget for your account.
+                    </p>
+                </div>
+            </section>
+
             <section class="container">
                 <h1>Spending by category</h1>
                 <canvas id="expenses-chart" aria-label="Expenses by category chart" role="img"></canvas>

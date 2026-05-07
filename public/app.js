@@ -45,6 +45,14 @@ const authSigninButton = document.getElementById("auth-signin");
 const authSignoutButton = document.getElementById("auth-signout");
 const authStatus = document.getElementById("auth-status");
 const authSessionState = document.getElementById("auth-session-state");
+const budgetForm = document.getElementById("budget-form");
+const budgetLimitInput = document.getElementById("budget-limit");
+const budgetMonthLabel = document.getElementById("budget-month-label");
+const budgetSpentLabel = document.getElementById("budget-spent-label");
+const budgetLimitLabel = document.getElementById("budget-limit-label");
+const budgetProgressBar = document.getElementById("budget-progress-bar");
+const budgetStatus = document.getElementById("budget-status");
+const budgetPanel = document.querySelector(".budget-panel");
 const filterSearch = document.getElementById("filter-search");
 const filterCategory = document.getElementById("filter-category");
 const filterFrom = document.getElementById("filter-from");
@@ -98,6 +106,12 @@ let selectedMonth = getMonthParam();
 let comparisonMonthAValue = getMonthParam();
 let comparisonMonthBValue = shiftMonth(getMonthParam(), -1);
 let currentView = "dashboard";
+let currentUser = null;
+let budgetState = {
+  month: selectedMonth,
+  limitAmount: null,
+  error: null,
+};
 let filters = {
   search: "",
   category: "",
@@ -131,6 +145,7 @@ const supabaseConfigured =
     updateMonthLabel();
     renderExpenses(expenses);
     await refreshDashboard();
+    await loadBudgetForSelectedMonth();
     await renderComparisonChart();
     renderView();
   } catch (error) {
@@ -207,6 +222,40 @@ if (comparisonApply) {
   });
 }
 
+if (budgetForm) {
+  budgetForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+
+    if (!supabase || !currentUser) {
+      if (budgetStatus) {
+        budgetStatus.textContent = "Sign in to save your budget.";
+        budgetStatus.classList.add("budget-meter__status--error");
+      }
+      return;
+    }
+
+    const limitAmount = Number(budgetLimitInput?.value);
+
+    if (!Number.isFinite(limitAmount) || limitAmount < 0) {
+      if (budgetStatus) {
+        budgetStatus.textContent = "Enter a valid budget amount.";
+        budgetStatus.classList.add("budget-meter__status--error");
+      }
+      return;
+    }
+
+    try {
+      await saveBudgetForMonth(selectedMonth, limitAmount);
+      await loadBudgetForSelectedMonth();
+    } catch (error) {
+      if (budgetStatus) {
+        budgetStatus.textContent = error.message || "Could not save budget.";
+        budgetStatus.classList.add("budget-meter__status--error");
+      }
+    }
+  });
+}
+
 dashboardTab.addEventListener("click", () => {
   currentView = "dashboard";
   renderView();
@@ -248,6 +297,7 @@ monthPrevButton.addEventListener("click", async () => {
   selectedMonth = shiftMonth(selectedMonth, -1);
   updateMonthLabel();
   try {
+    await loadBudgetForSelectedMonth();
     await refreshDashboard();
   } catch (error) {
     console.error(error);
@@ -258,6 +308,7 @@ monthNextButton.addEventListener("click", async () => {
   selectedMonth = shiftMonth(selectedMonth, 1);
   updateMonthLabel();
   try {
+    await loadBudgetForSelectedMonth();
     await refreshDashboard();
   } catch (error) {
     console.error(error);
@@ -411,6 +462,141 @@ function renderExpenses(expenses) {
 function renderMonthlyHighlight(expenses) {
   const total = expenses.reduce((sum, expense) => sum + Number(expense.amount), 0);
   monthlyAmount.textContent = `€${total.toFixed(2)}`;
+}
+
+async function loadBudgetForSelectedMonth() {
+  if (!budgetPanel) {
+    return;
+  }
+
+  budgetState.month = selectedMonth;
+
+  if (!supabase || !currentUser) {
+    budgetState.limitAmount = null;
+    budgetState.error = null;
+    await renderBudget();
+    return;
+  }
+
+  const { data, error } = await supabase
+    .from("budgets")
+    .select("limit_amount")
+    .eq("user_id", currentUser.id)
+    .eq("month", selectedMonth)
+    .maybeSingle();
+
+  if (error) {
+    budgetState.limitAmount = null;
+    budgetState.error = error.message || "Could not load budget.";
+    if (budgetStatus) {
+      budgetStatus.classList.add("budget-meter__status--error");
+    }
+    await renderBudget();
+    return;
+  }
+
+  budgetState.limitAmount = data ? Number(data.limit_amount) : null;
+  budgetState.error = null;
+  await renderBudget();
+}
+
+async function saveBudgetForMonth(month, limitAmount) {
+  if (!supabase || !currentUser) {
+    throw new Error("Sign in to save your budget.");
+  }
+
+  const payload = {
+    user_id: currentUser.id,
+    month,
+    limit_amount: limitAmount,
+    updated_at: new Date().toISOString(),
+  };
+
+  const { error } = await supabase.from("budgets").upsert(payload, {
+    onConflict: "user_id,month",
+  });
+
+  if (error) {
+    throw new Error(error.message || "Could not save budget.");
+  }
+
+  budgetState.error = null;
+}
+
+async function renderBudget() {
+  if (!budgetPanel) {
+    return;
+  }
+
+  const currentMonth = selectedMonth;
+  const monthSummary = await fetchMonthlySummary(currentMonth);
+  const spent = Object.values(monthSummary.totals || {}).reduce(
+    (sum, value) => sum + Number(value || 0),
+    0
+  );
+  const hasBudget = Number.isFinite(budgetState.limitAmount) && budgetState.limitAmount > 0;
+  const usage = hasBudget ? (spent / budgetState.limitAmount) * 100 : 0;
+
+  budgetPanel.classList.remove("budget-panel--warning", "budget-panel--danger");
+  budgetPanel.dataset.state = hasBudget ? "active" : "empty";
+
+  if (budgetMonthLabel) {
+    budgetMonthLabel.textContent = `For ${formatMonthLabel(currentMonth)}`;
+  }
+
+  if (budgetLimitInput && document.activeElement !== budgetLimitInput) {
+    budgetLimitInput.value = hasBudget ? String(budgetState.limitAmount) : "";
+  }
+
+  if (budgetSpentLabel) {
+    budgetSpentLabel.textContent = `Spent €${spent.toFixed(2)}`;
+  }
+
+  if (budgetLimitLabel) {
+    budgetLimitLabel.textContent = hasBudget
+      ? `Limit €${budgetState.limitAmount.toFixed(2)}`
+      : "Limit not set";
+  }
+
+  if (budgetProgressBar) {
+    budgetProgressBar.style.width = hasBudget ? `${Math.min(usage, 100)}%` : "0%";
+  }
+
+  if (!budgetStatus) {
+    return;
+  }
+
+  budgetStatus.classList.remove("budget-meter__status--error");
+
+  if (budgetState.error) {
+    budgetStatus.textContent = budgetState.error;
+    budgetStatus.classList.add("budget-meter__status--error");
+    return;
+  }
+
+  if (!currentUser) {
+    budgetStatus.textContent = "Sign in to save a monthly budget for your account.";
+    return;
+  }
+
+  if (!hasBudget) {
+    budgetStatus.textContent = "Set a monthly limit to start tracking your budget.";
+    return;
+  }
+
+  if (usage >= 100) {
+    budgetPanel.classList.add("budget-panel--danger");
+    budgetStatus.textContent = `You are over budget by €${(spent - budgetState.limitAmount).toFixed(2)}.`;
+    return;
+  }
+
+  if (usage >= 80) {
+    budgetPanel.classList.add("budget-panel--warning");
+    budgetStatus.textContent = `You have used ${usage.toFixed(0)}% of your budget.`;
+    return;
+  }
+
+  budgetStatus.textContent = `You have used ${usage.toFixed(0)}% of your budget.`;
 }
 
 async function applyFilters() {
@@ -575,6 +761,7 @@ async function refreshDashboard() {
   await renderKpis();
   await renderCharts();
   await renderReport();
+  await renderBudget();
 }
 
 function renderView() {
@@ -1068,25 +1255,30 @@ async function syncAuthState() {
   }
 
   setAuthSessionLabel(data?.session?.user || null);
+  currentUser = data?.session?.user || null;
   setAuthStatus(
-    data?.session?.user
+    currentUser
       ? "Signed in and ready."
       : "Sign in or create an account to start using your personal workspace.",
     false
   );
-  if (data?.session?.user) {
+  if (currentUser) {
     closeAuthPanel();
   } else {
     openAuthPanel();
   }
 
+  await loadBudgetForSelectedMonth();
+
   supabase.auth.onAuthStateChange((_event, session) => {
+    currentUser = session?.user || null;
     setAuthSessionLabel(session?.user || null);
     if (session?.user) {
       closeAuthPanel();
     } else {
       openAuthPanel();
     }
+    loadBudgetForSelectedMonth().catch((error) => console.error(error));
   });
 }
 
@@ -1162,6 +1354,7 @@ async function handleSignIn() {
   }
 
   setAuthStatus(data?.user ? "Signed in successfully." : "Signed in.", false);
+  currentUser = data?.user || null;
   await syncAuthState();
 }
 
@@ -1187,6 +1380,13 @@ async function handleSignOut() {
 
   setAuthStatus("Signed out.", false);
   setAuthSessionLabel(null);
+  currentUser = null;
+  budgetState = {
+    month: selectedMonth,
+    limitAmount: null,
+    error: null,
+  };
+  await renderBudget();
   openAuthPanel();
 }
 
