@@ -599,6 +599,35 @@ async function renderBudget() {
   budgetStatus.textContent = `You have used ${usage.toFixed(0)}% of your budget.`;
 }
 
+async function fetchMonthlySummary(month) {
+  const response = await fetch(`/api/expenses/summary?month=${month}`);
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.error || errorData.message || `Failed to load summary for ${month}`);
+  }
+
+  const data = await response.json();
+
+  if (data && typeof data === "object" && !Array.isArray(data)) {
+    if (data.totals && typeof data.totals === "object") {
+      return { month: data.month || month, totals: data.totals };
+    }
+
+    if (Array.isArray(data.expenses)) {
+      const totals = data.expenses.reduce((acc, expense) => {
+        const category = expense.category || "other";
+        acc[category] = Number(acc[category] || 0) + Number(expense.amount || 0);
+        return acc;
+      }, {});
+
+      return { month: data.month || month, totals };
+    }
+  }
+
+  return { month, totals: {} };
+}
+
 async function applyFilters() {
   filters = {
     search: filterSearch.value.trim(),
