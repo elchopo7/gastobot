@@ -318,6 +318,14 @@ monthNextButton.addEventListener("click", async () => {
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
 
+  if (!currentUser) {
+    if (expenseFormStatus) {
+      expenseFormStatus.textContent = "Sign in to save an expense.";
+      expenseFormStatus.classList.add("form-status--error");
+    }
+    return;
+  }
+
   const formData = new FormData(form);
 
   const newExpense = {
@@ -325,6 +333,7 @@ form.addEventListener("submit", async (event) => {
     category: formData.get("category"),
     description: formData.get("description") || "No description",
     date: formData.get("date"),
+    user_id: currentUser.id,
   };
 
   const response = await fetch("/api/expenses", {

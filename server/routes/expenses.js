@@ -27,6 +27,7 @@ const allowedCategories = new Set([
 
 function validateExpensePayload(payload) {
   const numericAmount = Number(payload.amount);
+  const hasValidUserId = typeof payload.user_id === "string" && payload.user_id.trim() !== "";
 
   if (
     !Number.isFinite(numericAmount) ||
@@ -40,12 +41,18 @@ function validateExpensePayload(payload) {
     return null;
   }
 
-  return {
+  const validated = {
     amount: numericAmount,
     category: payload.category,
     description: payload.description.trim(),
     date: payload.date,
   };
+
+  if (hasValidUserId) {
+    validated.user_id = payload.user_id.trim();
+  }
+
+  return validated;
 }
 
 router.get("/", async (req, res) => {
@@ -190,7 +197,7 @@ router.get("/:id", async (req, res) => {
 router.post("/", async (req, res) => {
   const expense = validateExpensePayload(req.body);
 
-  if (!expense) {
+  if (!expense || !expense.user_id) {
     return res.status(400).json({ message: "Invalid expense data" });
   }
 
@@ -212,6 +219,8 @@ router.put("/:id", async (req, res) => {
   if (!expense) {
     return res.status(400).json({ message: "Invalid expense data" });
   }
+
+  delete expense.user_id;
 
   try {
     const updatedExpense = await editExpense(req.params.id, expense);
