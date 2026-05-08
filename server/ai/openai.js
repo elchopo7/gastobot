@@ -36,8 +36,37 @@ async function analyzeReceiptImage({ imageDataUrl, hintMonth }) {
 
   const response = await client.responses.create({
     model: "gpt-4o-mini",
+    max_output_tokens: 250,
     instructions:
       "Eres un asistente de contabilidad de gastos. Extrae datos de tickets con alta precisión. Devuelve SOLO JSON válido con las claves amount, currency, merchant, date, confidence y notes. amount debe ser numérico positivo, date en formato YYYY-MM-DD si la detectas, confidence entre 0 y 1. Si no puedes detectar un campo, usa null. No inventes datos.",
+    text: {
+      format: {
+        type: "json_schema",
+        name: "receipt_analysis",
+        strict: true,
+        schema: {
+          type: "object",
+          additionalProperties: false,
+          properties: {
+            amount: { anyOf: [{ type: "number" }, { type: "null" }] },
+            currency: { anyOf: [{ type: "string" }, { type: "null" }] },
+            merchant: { anyOf: [{ type: "string" }, { type: "null" }] },
+            date: {
+              anyOf: [
+                {
+                  type: "string",
+                  pattern: "^\\d{4}-\\d{2}-\\d{2}$",
+                },
+                { type: "null" },
+              ],
+            },
+            confidence: { anyOf: [{ type: "number" }, { type: "null" }] },
+            notes: { anyOf: [{ type: "string" }, { type: "null" }] },
+          },
+          required: ["amount", "currency", "merchant", "date", "confidence", "notes"],
+        },
+      },
+    },
     input: [
       {
         role: "user",
@@ -52,6 +81,7 @@ async function analyzeReceiptImage({ imageDataUrl, hintMonth }) {
           {
             type: "input_image",
             image_url: imageDataUrl,
+            detail: "high",
           },
         ],
       },
@@ -64,7 +94,7 @@ async function analyzeReceiptImage({ imageDataUrl, hintMonth }) {
   try {
     parsed = JSON.parse(stripJsonEnvelope(outputText));
   } catch {
-    throw new Error("Receipt analysis did not return valid JSON");
+    throw new Error(`Receipt analysis did not return valid JSON: ${outputText.slice(0, 120)}`);
   }
 
   return {

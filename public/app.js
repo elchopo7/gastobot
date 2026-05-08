@@ -712,7 +712,7 @@ async function analyzeSelectedTicket() {
   setTicketActionLoading(true);
 
   try {
-    const imageDataUrl = await readFileAsDataUrl(ticketState.file);
+    const imageDataUrl = await compressReceiptImage(ticketState.file);
     const response = await fetch("/api/receipts/analyze", {
       method: "POST",
       headers: {
@@ -750,7 +750,7 @@ async function analyzeSelectedTicket() {
       ticketApplyButton.classList.remove("is-hidden");
     }
   } catch (error) {
-    setTicketError(error.message || "Receipt analysis failed.");
+    setTicketError(`${error.message || "Receipt analysis failed."} You can try local OCR as a fallback.`);
   } finally {
     ticketState.isProcessing = false;
     setTicketActionLoading(false);
@@ -828,6 +828,46 @@ async function scanSelectedTicketWithLocalOcr() {
     ticketState.isProcessing = false;
     setTicketActionLoading(false);
   }
+}
+
+async function compressReceiptImage(file) {
+  const imageDataUrl = await readFileAsDataUrl(file);
+
+  if (!window.document?.createElement) {
+    return imageDataUrl;
+  }
+
+  const image = await loadImage(imageDataUrl);
+  const maxSize = 1600;
+  const scale = Math.min(1, maxSize / Math.max(image.width, image.height));
+
+  if (scale >= 1) {
+    return imageDataUrl;
+  }
+
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.max(1, Math.round(image.width * scale));
+  canvas.height = Math.max(1, Math.round(image.height * scale));
+
+  const context = canvas.getContext("2d");
+  if (!context) {
+    return imageDataUrl;
+  }
+
+  context.fillStyle = "#ffffff";
+  context.fillRect(0, 0, canvas.width, canvas.height);
+  context.drawImage(image, 0, 0, canvas.width, canvas.height);
+
+  return canvas.toDataURL("image/jpeg", 0.84);
+}
+
+function loadImage(src) {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error("Could not load the selected image."));
+    image.src = src;
+  });
 }
 
 function parseTicketText(text) {
