@@ -4,6 +4,7 @@ const path = require("path");
 const expensesRouter = require("./routes/expenses");
 const aiRouter = require("./routes/ai");
 const receiptsRouter = require("./routes/receipts");
+const reportsRouter = require("./routes/reports");
 const { seedDatabase } = require("./db/seed");
 const { createTelegramBot } = require("./telegram/bot");
 const { addExpense, findAllExpenses, getSummaryByMonth } = require("./db/expenses");
@@ -33,6 +34,7 @@ app.use(
 app.use("/api/expenses", expensesRouter);
 app.use("/api/ai", aiRouter);
 app.use("/api/receipts", receiptsRouter);
+app.use("/api/reports", reportsRouter);
 
 app.post("/api/telegram-webhook", (req, res) => {
   if (!telegramBot) {

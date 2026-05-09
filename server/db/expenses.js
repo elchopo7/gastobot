@@ -58,8 +58,38 @@ async function findExpensesByMonth(month) {
   return normalizeRows(data);
 }
 
+async function findExpensesByMonthAndUser(month, userId) {
+  const { data, error } = await supabase
+    .from("expenses")
+    .select("id, amount, category, description, date, created_at")
+    .eq("user_id", userId)
+    .gte("date", `${month}-01`)
+    .lte("date", getMonthBounds(month).end)
+    .order("date", { ascending: false })
+    .order("created_at", { ascending: false })
+    .order("id", { ascending: false });
+
+  if (error) {
+    throw error;
+  }
+
+  return normalizeRows(data);
+}
+
 async function getSummaryByMonth(month) {
   const expenses = await findExpensesByMonth(month);
+  const totalsByCategory = expenses.reduce((acc, expense) => {
+    acc[expense.category] = (acc[expense.category] || 0) + Number(expense.amount || 0);
+    return acc;
+  }, {});
+
+  return Object.entries(totalsByCategory)
+    .map(([category, total]) => ({ category, total }))
+    .sort((a, b) => b.total - a.total || a.category.localeCompare(b.category));
+}
+
+async function getSummaryByMonthAndUser(month, userId) {
+  const expenses = await findExpensesByMonthAndUser(month, userId);
   const totalsByCategory = expenses.reduce((acc, expense) => {
     acc[expense.category] = (acc[expense.category] || 0) + Number(expense.amount || 0);
     return acc;
@@ -189,7 +219,9 @@ async function getComparisonTotals(month) {
 module.exports = {
   findAllExpenses,
   findExpensesByMonth,
+  findExpensesByMonthAndUser,
   getSummaryByMonth,
+  getSummaryByMonthAndUser,
   getEvolutionByYear,
   getAllMonthlyTotals,
   findExpenseById,
