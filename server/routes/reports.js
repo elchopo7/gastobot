@@ -203,7 +203,13 @@ function buildPdfDefinition({ month, userLabel, summaryRows, expenses, total, bu
               { text: budgetSummaryText, style: "small", margin: [0, 4, 0, 0] },
               { text: budgetBar, style: "small", margin: [0, 6, 0, 0], color: budgetAccent },
             ],
-            fillColor: budgetAccent + "22",
+            fillColor: budgetAccent === "#ef4444"
+              ? "#fef2f2"
+              : budgetAccent === "#f59e0b"
+                ? "#fffbeb"
+                : budgetAccent === "#10b981"
+                  ? "#ecfdf5"
+                  : "#f8fafc",
             border: [1, 1, 1, 1],
             borderColor: budgetAccent,
             borderRadius: 8,
