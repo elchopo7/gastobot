@@ -53,6 +53,11 @@ function buildPdfDefinition({ month, userLabel, summaryRows, expenses, total, bu
   const topCategory = summaryRows[0] || null;
   const monthDate = new Date(`${month}-01T00:00:00Z`);
   const monthLabel = monthDate.toLocaleDateString("en-GB", { month: "long", year: "numeric", timeZone: "UTC" });
+  const budgetUsage = budgetLimit && budgetLimit > 0 ? (total / budgetLimit) * 100 : null;
+  const budgetRemaining = budgetLimit && budgetLimit > 0 ? budgetLimit - total : null;
+  const budgetSummaryText = budgetLimit && budgetLimit > 0
+    ? `Used ${budgetUsage.toFixed(0)}% · ${budgetRemaining >= 0 ? `€${budgetRemaining.toFixed(2)} remaining` : `€${Math.abs(budgetRemaining).toFixed(2)} over budget`}`
+    : "No budget configured";
 
   return {
     pageSize: "A4",
@@ -117,6 +122,7 @@ function buildPdfDefinition({ month, userLabel, summaryRows, expenses, total, bu
             stack: [
               { text: "Budget", style: "metricLabel" },
               { text: budgetLimit ? `€${budgetLimit.toFixed(2)}` : "Not set", style: "metricValue" },
+              { text: budgetSummaryText, style: "small", margin: [0, 4, 0, 0] },
             ],
             fillColor: "#f8fafc",
             marginBottom: 8,
@@ -199,7 +205,18 @@ router.get("/monthly.pdf", async (req, res) => {
     ]);
 
     const total = expenses.reduce((sum, expense) => sum + Number(expense.amount || 0), 0);
-    const budgetLimit = null;
+    const { data: budgetRow, error: budgetError } = await supabase
+      .from("budgets")
+      .select("limit_amount")
+      .eq("user_id", userId)
+      .eq("month", month)
+      .maybeSingle();
+
+    if (budgetError) {
+      throw budgetError;
+    }
+
+    const budgetLimit = budgetRow ? Number(budgetRow.limit_amount) : null;
     const userLabel = user.email || "Signed-in user";
 
     const docDefinition = buildPdfDefinition({
