@@ -1,6 +1,7 @@
 const express = require("express");
 const PdfPrinter = require("pdfmake");
 const path = require("path");
+const supabase = require("../db/supabase");
 const {
   findExpensesByMonthAndUser,
   getSummaryByMonthAndUser,
@@ -21,6 +22,25 @@ const printer = new PdfPrinter(fonts);
 
 function parseMonth(month) {
   return /^\d{4}-\d{2}$/.test(month || "") ? month : null;
+}
+
+async function getAuthenticatedUser(req) {
+  const authHeader = req.headers.authorization || "";
+  const token = authHeader.toLowerCase().startsWith("bearer ")
+    ? authHeader.slice(7).trim()
+    : "";
+
+  if (!token) {
+    return null;
+  }
+
+  const { data, error } = await supabase.auth.getUser(token);
+
+  if (error) {
+    throw new Error(error.message || "Could not validate session");
+  }
+
+  return data?.user || null;
 }
 
 function buildPdfDefinition({ month, userLabel, summaryRows, expenses, total, budgetLimit }) {
@@ -159,18 +179,20 @@ function buildPdfDefinition({ month, userLabel, summaryRows, expenses, total, bu
 
 router.get("/monthly.pdf", async (req, res) => {
   const month = parseMonth(req.query.month);
-  const userId = typeof req.query.user_id === "string" ? req.query.user_id.trim() : "";
-  const userLabel = typeof req.query.user_label === "string" ? req.query.user_label.trim() : "";
 
   if (!month) {
     return res.status(400).json({ message: "Month is required and must be in YYYY-MM format" });
   }
 
-  if (!userId) {
-    return res.status(400).json({ message: "User id is required" });
-  }
-
   try {
+    const user = await getAuthenticatedUser(req);
+
+    if (!user) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const userId = user.id;
+
     const [summaryRows, expenses] = await Promise.all([
       getSummaryByMonthAndUser(month, userId),
       findExpensesByMonthAndUser(month, userId),
@@ -178,6 +200,7 @@ router.get("/monthly.pdf", async (req, res) => {
 
     const total = expenses.reduce((sum, expense) => sum + Number(expense.amount || 0), 0);
     const budgetLimit = null;
+    const userLabel = user.email || "Signed-in user";
 
     const docDefinition = buildPdfDefinition({
       month,

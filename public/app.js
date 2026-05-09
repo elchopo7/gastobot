@@ -1255,8 +1255,9 @@ async function askOpenAiAboutExpenses() {
 
 async function exportMonthlyReportPdf() {
   const activeUser = await getActiveUser();
+  const activeSession = await getActiveSession();
 
-  if (!activeUser) {
+  if (!activeUser || !activeSession?.access_token) {
     if (reportSubtitle) {
       reportSubtitle.textContent = "Sign in to export your monthly PDF.";
     }
@@ -1271,11 +1272,12 @@ async function exportMonthlyReportPdf() {
   try {
     const url = new URL("/api/reports/monthly.pdf", window.location.origin);
     url.searchParams.set("month", selectedMonth);
-    url.searchParams.set("user_id", activeUser.id);
-    url.searchParams.set("user_label", activeUser.email || "Signed-in user");
 
     const response = await fetch(url.toString(), {
       method: "GET",
+      headers: {
+        Authorization: `Bearer ${activeSession.access_token}`,
+      },
     });
 
     if (!response.ok) {
@@ -1843,6 +1845,20 @@ async function getActiveUser() {
 
   currentUser = data?.user || null;
   return currentUser;
+}
+
+async function getActiveSession() {
+  if (!supabase) {
+    return null;
+  }
+
+  const { data, error } = await supabase.auth.getSession();
+
+  if (error) {
+    return null;
+  }
+
+  return data?.session || null;
 }
 
 function syncThemeToggle() {
