@@ -1,5 +1,4 @@
 const PdfPrinter = require("pdfmake");
-const path = require("path");
 const supabase = require("../../server/db/supabase");
 const {
   findExpensesByMonthAndUser,
@@ -7,11 +6,11 @@ const {
 } = require("../../server/db/expenses");
 
 const fonts = {
-  Roboto: {
-    normal: path.join(__dirname, "../../../node_modules/pdfmake/examples/fonts/Roboto-Regular.ttf"),
-    bold: path.join(__dirname, "../../../node_modules/pdfmake/examples/fonts/Roboto-Medium.ttf"),
-    italics: path.join(__dirname, "../../../node_modules/pdfmake/examples/fonts/Roboto-Italic.ttf"),
-    bolditalics: path.join(__dirname, "../../../node_modules/pdfmake/examples/fonts/Roboto-MediumItalic.ttf"),
+  Helvetica: {
+    normal: "Helvetica",
+    bold: "Helvetica-Bold",
+    italics: "Helvetica-Oblique",
+    bolditalics: "Helvetica-BoldOblique",
   },
 };
 
@@ -117,7 +116,7 @@ function buildPdfDefinition({ month, userLabel, summaryRows, expenses, total, bu
     pageSize: "A4",
     pageMargins: [40, 48, 40, 48],
     defaultStyle: {
-      font: "Roboto",
+      font: "Helvetica",
       fontSize: 10,
       color: "#111827",
     },
