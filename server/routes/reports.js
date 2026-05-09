@@ -50,6 +50,13 @@ function buildPdfDefinition({ month, userLabel, summaryRows, expenses, total, bu
     `${total > 0 ? ((Number(row.total || 0) / total) * 100).toFixed(0) : "0"}%`,
   ]);
 
+  const recentExpenseRows = expenses.slice(0, 5).map((expense) => [
+    expense.date,
+    expense.description,
+    expense.category,
+    `€${Number(expense.amount || 0).toFixed(2)}`,
+  ]);
+
   const topCategory = summaryRows[0] || null;
   const monthDate = new Date(`${month}-01T00:00:00Z`);
   const monthLabel = monthDate.toLocaleDateString("en-GB", { month: "long", year: "numeric", timeZone: "UTC" });
@@ -58,6 +65,13 @@ function buildPdfDefinition({ month, userLabel, summaryRows, expenses, total, bu
   const budgetSummaryText = budgetLimit && budgetLimit > 0
     ? `Used ${budgetUsage.toFixed(0)}% · ${budgetRemaining >= 0 ? `€${budgetRemaining.toFixed(2)} remaining` : `€${Math.abs(budgetRemaining).toFixed(2)} over budget`}`
     : "No budget configured";
+  const budgetAccent = !budgetLimit
+    ? "#94a3b8"
+    : budgetUsage >= 100
+      ? "#ef4444"
+      : budgetUsage >= 80
+        ? "#f59e0b"
+        : "#10b981";
 
   return {
     pageSize: "A4",
@@ -97,12 +111,36 @@ function buildPdfDefinition({ month, userLabel, summaryRows, expenses, total, bu
         fontSize: 9,
         color: "#6b7280",
       },
+      coverTitle: {
+        fontSize: 24,
+        bold: true,
+        color: "#ffffff",
+      },
+      coverSub: {
+        fontSize: 11,
+        color: "#e2e8f0",
+      },
+      coverMeta: {
+        fontSize: 9,
+        color: "#cbd5e1",
+      },
     },
     content: [
-      { text: "GastoBot", style: "title" },
-      { text: `Monthly report for ${monthLabel}`, style: "subtitle" },
-      { text: `Generated for ${userLabel || "signed-in user"}`, style: "small", margin: [0, 4, 0, 0] },
-      { text: `Period: ${month}`, style: "small", margin: [0, 2, 0, 0] },
+      {
+        canvas: [
+          { type: "rect", x: 0, y: 0, w: 515, h: 120, color: "#2563eb" },
+        ],
+      },
+      {
+        margin: [24, -96, 24, 12],
+        stack: [
+          { text: "GastoBot", style: "coverTitle" },
+          { text: `Monthly report · ${monthLabel}`, style: "coverSub", margin: [0, 6, 0, 0] },
+          { text: `Generated for ${userLabel || "signed-in user"}`, style: "coverMeta", margin: [0, 4, 0, 0] },
+          { text: `Period: ${month}`, style: "coverMeta", margin: [0, 2, 0, 0] },
+        ],
+      },
+      { text: " ", margin: [0, 6, 0, 0] },
 
       {
         columns: [
@@ -124,7 +162,10 @@ function buildPdfDefinition({ month, userLabel, summaryRows, expenses, total, bu
               { text: budgetLimit ? `€${budgetLimit.toFixed(2)}` : "Not set", style: "metricValue" },
               { text: budgetSummaryText, style: "small", margin: [0, 4, 0, 0] },
             ],
-            fillColor: "#f8fafc",
+            fillColor: budgetAccent + "22",
+            border: [1, 1, 1, 1],
+            borderColor: budgetAccent,
+            borderRadius: 8,
             marginBottom: 8,
           },
           {
@@ -175,9 +216,28 @@ function buildPdfDefinition({ month, userLabel, summaryRows, expenses, total, bu
         style: "sectionTitle",
       },
       {
-        ul: expenses.slice(0, 8).map((expense) =>
-          `${expense.date} · ${expense.description} · €${Number(expense.amount).toFixed(2)} · ${expense.category}`
-        ),
+        table: {
+          headerRows: 1,
+          widths: ["auto", "*", "auto", "auto"],
+          body: [
+            [
+              { text: "Date", bold: true },
+              { text: "Description", bold: true },
+              { text: "Category", bold: true },
+              { text: "Amount", bold: true, alignment: "right" },
+            ],
+            ...(recentExpenseRows.length
+              ? recentExpenseRows
+              : [[{ text: "No expenses yet", colSpan: 4, italics: true, color: "#6b7280" }, {}, {}, {}]]),
+          ],
+        },
+        layout: {
+          fillColor: (rowIndex) => (rowIndex === 0 ? "#dbeafe" : rowIndex % 2 === 0 ? "#f8fafc" : null),
+          hLineColor: "#e5e7eb",
+          vLineColor: "#e5e7eb",
+          paddingTop: () => 6,
+          paddingBottom: () => 6,
+        },
       },
     ],
   };
