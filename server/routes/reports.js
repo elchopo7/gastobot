@@ -43,6 +43,21 @@ async function getAuthenticatedUser(req) {
   return data?.user || null;
 }
 
+async function getBudgetLimitForMonth(month, userId) {
+  const { data, error } = await supabase
+    .from("budgets")
+    .select("limit_amount")
+    .eq("user_id", userId)
+    .eq("month", month)
+    .maybeSingle();
+
+  if (error) {
+    throw error;
+  }
+
+  return data ? Number(data.limit_amount) : null;
+}
+
 function buildPdfDefinition({ month, userLabel, summaryRows, expenses, total, budgetLimit }) {
   const categoryRows = summaryRows.map((row) => [
     row.category,
@@ -302,18 +317,7 @@ router.get("/monthly.pdf", async (req, res) => {
     ]);
 
     const total = expenses.reduce((sum, expense) => sum + Number(expense.amount || 0), 0);
-    const { data: budgetRow, error: budgetError } = await supabase
-      .from("budgets")
-      .select("limit_amount")
-      .eq("user_id", userId)
-      .eq("month", month)
-      .maybeSingle();
-
-    if (budgetError) {
-      throw budgetError;
-    }
-
-    const budgetLimit = budgetRow ? Number(budgetRow.limit_amount) : null;
+    const budgetLimit = await getBudgetLimitForMonth(month, userId);
     const userLabel = user.email || "Signed-in user";
 
     const docDefinition = buildPdfDefinition({
@@ -328,7 +332,9 @@ router.get("/monthly.pdf", async (req, res) => {
     const pdfDoc = printer.createPdfKitDocument(docDefinition);
 
     res.setHeader("Content-Type", "application/pdf");
-    res.setHeader("Content-Disposition", `attachment; filename="gastobot-report-${month}.pdf"`);
+    res.setHeader("Content-Disposition", `attachment; filename="${buildSafePdfFilename(month, user.email)}"`);
+    res.setHeader("X-Content-Type-Options", "nosniff");
+    res.setHeader("Cache-Control", "no-store, max-age=0");
 
     pdfDoc.pipe(res);
     pdfDoc.end();
@@ -342,3 +348,13 @@ router.get("/monthly.pdf", async (req, res) => {
 });
 
 module.exports = router;
+
+function buildSafePdfFilename(month, email) {
+  const emailPart = String(email || "user")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 24) || "user";
+
+  return `gastobot-report-${month}-${emailPart}.pdf`;
+}
