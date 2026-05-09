@@ -782,11 +782,13 @@ button:active {
 .report-header__actions {
   display: flex;
   gap: 8px;
+  flex-wrap: wrap;
 }
 
 .report-action {
   margin: 0;
   flex: 1;
+  min-width: 0;
 }
 
 .report-panel {

@@ -32,6 +32,7 @@ const reportTopCategoryNote = document.getElementById("report-top-category-note"
 const reportCategoryList = document.getElementById("report-category-list");
 const reportShareButton = document.getElementById("report-share");
 const reportExportButton = document.getElementById("report-export");
+const reportPdfButton = document.getElementById("report-pdf");
 const reportTrendChartCanvas = document.getElementById("report-trend-chart");
 const monthlyEvolutionTitle = document.getElementById("monthly-evolution-title");
 const themeToggle = document.getElementById("theme-toggle");
@@ -334,6 +335,10 @@ reportShareButton.addEventListener("click", async () => {
 reportExportButton.addEventListener("click", () => {
   window.print();
 });
+
+if (reportPdfButton) {
+  reportPdfButton.addEventListener("click", exportMonthlyReportPdf);
+}
 
 monthPrevButton.addEventListener("click", async () => {
   selectedMonth = shiftMonth(selectedMonth, -1);
@@ -1244,6 +1249,57 @@ async function askOpenAiAboutExpenses() {
     if (aiAskButton) {
       aiAskButton.disabled = false;
       aiAskButton.textContent = "Ask AI";
+    }
+  }
+}
+
+async function exportMonthlyReportPdf() {
+  const activeUser = await getActiveUser();
+
+  if (!activeUser) {
+    if (reportSubtitle) {
+      reportSubtitle.textContent = "Sign in to export your monthly PDF.";
+    }
+    return;
+  }
+
+  if (reportPdfButton) {
+    reportPdfButton.disabled = true;
+    reportPdfButton.textContent = "Generating...";
+  }
+
+  try {
+    const url = new URL("/api/reports/monthly.pdf", window.location.origin);
+    url.searchParams.set("month", selectedMonth);
+    url.searchParams.set("user_id", activeUser.id);
+    url.searchParams.set("user_label", activeUser.email || "Signed-in user");
+
+    const response = await fetch(url.toString(), {
+      method: "GET",
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || errorData.message || "Could not generate PDF.");
+    }
+
+    const pdfBlob = await response.blob();
+    const downloadUrl = URL.createObjectURL(pdfBlob);
+    const link = document.createElement("a");
+    link.href = downloadUrl;
+    link.download = `gastobot-report-${selectedMonth}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(downloadUrl);
+  } catch (error) {
+    if (reportSubtitle) {
+      reportSubtitle.textContent = error.message || "Could not generate PDF.";
+    }
+  } finally {
+    if (reportPdfButton) {
+      reportPdfButton.disabled = false;
+      reportPdfButton.textContent = "Export PDF";
     }
   }
 }
