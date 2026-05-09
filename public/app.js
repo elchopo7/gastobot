@@ -1293,24 +1293,6 @@ async function exportMonthlyReportPdf() {
     const downloadUrl = URL.createObjectURL(pdfBlob);
     const filename = `gastobot-report-${selectedMonth}.pdf`;
 
-    if (navigator.share && navigator.canShare) {
-      const file = new File([pdfBlob], filename, { type: "application/pdf" });
-
-      if (navigator.canShare({ files: [file] })) {
-        try {
-          await navigator.share({
-            title: "GastoBot monthly report",
-            text: `Monthly report for ${selectedMonth}`,
-            files: [file],
-          });
-          URL.revokeObjectURL(downloadUrl);
-          return;
-        } catch (shareError) {
-          // Fall back to download below.
-        }
-      }
-    }
-
     const link = document.createElement("a");
     link.href = downloadUrl;
     link.download = filename;
