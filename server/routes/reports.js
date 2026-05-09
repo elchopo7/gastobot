@@ -72,6 +72,13 @@ function buildPdfDefinition({ month, userLabel, summaryRows, expenses, total, bu
       : budgetUsage >= 80
         ? "#f59e0b"
         : "#10b981";
+  const generationDate = new Date();
+  const generationLabel = generationDate.toLocaleString("en-GB", {
+    dateStyle: "medium",
+    timeStyle: "short",
+    timeZone: "Europe/Madrid",
+  });
+  const budgetBar = buildTextBudgetBar(budgetUsage);
 
   return {
     pageSize: "A4",
@@ -125,6 +132,24 @@ function buildPdfDefinition({ month, userLabel, summaryRows, expenses, total, bu
         color: "#cbd5e1",
       },
     },
+    footer: (currentPage, pageCount) => ({
+      margin: [40, 0, 40, 24],
+      columns: [
+        {
+          width: "*",
+          text: `Generated on ${generationLabel}`,
+          style: "small",
+          color: "#64748b",
+        },
+        {
+          width: "auto",
+          alignment: "right",
+          text: `Page ${currentPage} of ${pageCount}`,
+          style: "small",
+          color: "#64748b",
+        },
+      ],
+    }),
     content: [
       {
         canvas: [
@@ -161,6 +186,7 @@ function buildPdfDefinition({ month, userLabel, summaryRows, expenses, total, bu
               { text: "Budget", style: "metricLabel" },
               { text: budgetLimit ? `€${budgetLimit.toFixed(2)}` : "Not set", style: "metricValue" },
               { text: budgetSummaryText, style: "small", margin: [0, 4, 0, 0] },
+              { text: budgetBar, style: "small", margin: [0, 6, 0, 0], color: budgetAccent },
             ],
             fillColor: budgetAccent + "22",
             border: [1, 1, 1, 1],
@@ -241,6 +267,17 @@ function buildPdfDefinition({ month, userLabel, summaryRows, expenses, total, bu
       },
     ],
   };
+}
+
+function buildTextBudgetBar(percentage) {
+  if (!Number.isFinite(percentage)) {
+    return "Budget: not available";
+  }
+
+  const clamped = Math.max(0, Math.min(100, percentage));
+  const filled = Math.round(clamped / 10);
+  const empty = 10 - filled;
+  return `Budget: [${"█".repeat(filled)}${"░".repeat(empty)}] ${clamped.toFixed(0)}%`;
 }
 
 router.get("/monthly.pdf", async (req, res) => {
