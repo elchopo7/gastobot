@@ -1266,7 +1266,11 @@ async function exportMonthlyReportPdf() {
 
   if (reportPdfButton) {
     reportPdfButton.disabled = true;
-    reportPdfButton.textContent = "Generating...";
+    reportPdfButton.textContent = "Preparing PDF...";
+  }
+
+  if (reportSubtitle) {
+    reportSubtitle.textContent = "Preparing PDF...";
   }
 
   try {
