@@ -785,6 +785,13 @@ button:active {
   flex-wrap: wrap;
 }
 
+.report-header__help {
+  margin: 10px 0 0;
+  font-size: 0.82rem;
+  line-height: 1.4;
+  color: var(--text-muted);
+}
+
 .report-action {
   margin: 0;
   flex: 1;
