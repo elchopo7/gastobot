@@ -175,7 +175,7 @@ Publicar la aplicación.
 
 ## Futuras mejoras
 
-* [ ] Autenticación de usuarios
+* [X] Autenticación de usuarios
 * [X] Soporte multiusuario
 * [ ] Categorías personalizadas
 * [X] Exportación a CSV
