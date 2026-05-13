@@ -177,10 +177,10 @@ Publicar la aplicación.
 
 * [X] Autenticación de usuarios
 * [X] Soporte multiusuario
-* [ ] Categorías personalizadas
+* [] Categorías personalizadas
 * [X] Exportación a CSV
 * [ ] Notificaciones
-* [ ] Clasificación automática de gastos mediante IA
+* [X] Clasificación automática de gastos mediante IA
 ---
 
 ## Historial
