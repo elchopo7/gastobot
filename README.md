@@ -20,7 +20,7 @@ La app usa:
 - `Express` para el backend
 - `Supabase` como base de datos
 - `Chart.js` para los gráficos
-- `OpenAI` para consultas asistidas por IA
+- `Gemini` para consultas asistidas por IA
 - `Telegram Bot API` para capturar gastos desde Telegram
 
 ## Instalación
