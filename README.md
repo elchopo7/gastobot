@@ -18,6 +18,7 @@ La aplicación está pensada para llevar un control sencillo de tus gastos sin d
 La app usa:
 
 - `Express` para el backend
+- `Node.js` para el backend
 - `Supabase` como base de datos
 - `Chart.js` para los gráficos
 - `Gemini` para consultas asistidas por IA
